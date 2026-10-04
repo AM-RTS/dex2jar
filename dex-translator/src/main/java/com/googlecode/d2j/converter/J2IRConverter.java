@@ -420,12 +420,12 @@ public final class J2IRConverter {
                         if (sort == Type.OBJECT || sort == Type.ARRAY) {
                             return b(1, Exprs.nType(type.getDescriptor()));
                         } else if (sort == Type.METHOD) {
-                            throw new UnsupportedOperationException("Not supported yet.");
+                            return b(1, Exprs.nProto(Asm2Dex.toMethodType(type.getDescriptor())));
                         } else {
                             throw new IllegalArgumentException("Illegal LDC constant " + cst);
                         }
                     } else if (cst instanceof Handle) {
-                        throw new UnsupportedOperationException("Not supported yet.");
+                        return b(1, Exprs.nMethodHandle(Asm2Dex.toMethodHandle((Handle) cst)));
                     } else {
                         throw new IllegalArgumentException("Illegal LDC constant " + cst);
                     }
