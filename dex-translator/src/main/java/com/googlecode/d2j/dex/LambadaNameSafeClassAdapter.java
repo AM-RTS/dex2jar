@@ -1,6 +1,6 @@
 package com.googlecode.d2j.dex;
 
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.commons.ClassRemapper;

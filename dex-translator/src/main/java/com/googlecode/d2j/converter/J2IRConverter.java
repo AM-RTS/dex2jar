@@ -17,7 +17,7 @@ import com.googlecode.dex2jar.ir.stmt.LabelStmt;
 import com.googlecode.dex2jar.ir.stmt.Stmt;
 import com.googlecode.dex2jar.ir.stmt.StmtList;
 import com.googlecode.dex2jar.ir.stmt.Stmts;
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;

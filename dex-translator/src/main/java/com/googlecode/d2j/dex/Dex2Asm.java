@@ -31,7 +31,7 @@ import com.googlecode.dex2jar.ir.ts.UnSSATransformer;
 import com.googlecode.dex2jar.ir.ts.VoidInvokeTransformer;
 import com.googlecode.dex2jar.ir.ts.ZeroTransformer;
 import com.googlecode.dex2jar.ir.ts.array.FillArrayTransformer;
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +58,11 @@ import org.objectweb.asm.tree.InnerClassNode;
 
 public class Dex2Asm {
     private ConstructorRepair constructorRepair;
+    protected final java.util.Random random;
+
+    public Dex2Asm() { this(new java.util.Random(0)); }
+    protected Dex2Asm(java.util.Random random) { this.random = java.util.Objects.requireNonNull(random); }
+
 
     private static boolean isPowerOfTwo(int i) {
         return (i & (i - 1)) == 0;
@@ -75,6 +80,9 @@ public class Dex2Asm {
 
     public static class ClzCtx {
 
+        private final java.util.Random random;
+        public ClzCtx() { this(new java.util.Random(0)); }
+        public ClzCtx(java.util.Random random) { this.random = java.util.Objects.requireNonNull(random); }
         public String classDescriptor;
 
         public String hexDecodeMethodNamePrefix;
@@ -82,7 +90,7 @@ public class Dex2Asm {
         public String buildHexDecodeMethodName(String x) {
             if (hexDecodeMethodNamePrefix == null) {
                 byte[] d = new byte[4];
-                Dex2jar.random.nextBytes(d);
+                random.nextBytes(d);
                 hexDecodeMethodNamePrefix = "$d2j$hex$" + IR2JConverter.hexEncode(d);
             }
             return hexDecodeMethodNamePrefix + "$decode_" + x;
@@ -563,7 +571,7 @@ public class Dex2Asm {
             }
         }
         if (classNode.methods != null) {
-            ClzCtx clzCtx = new ClzCtx();
+            ClzCtx clzCtx = new ClzCtx(random);
             clzCtx.classDescriptor = classNode.className;
             for (DexMethodNode methodNode : classNode.methods) {
                 DexFix.fixTooLongStringConstant(methodNode);
@@ -638,17 +646,20 @@ public class Dex2Asm {
                 ClassVisitorFactory delayed = name -> {
                     ClassVisitor visitor = cvf.create(name);
                     if (visitor == null) return null;
-                    visitors.put("L" + name + ";", visitor);
+                    synchronized (visitors) { visitors.put("L" + name + ";", visitor); }
                     return new ClassVisitor(Constants.ASM_VERSION, visitor) {
                         @Override public void visitEnd() { /* Finish after forwarding constructors. */ }
                     };
                 };
-                for (DexClassNode classNode : fileNode.clzs)
-                    convertClass(fileNode, classNode, delayed, classes);
+                convertClasses(fileNode, delayed, classes);
                 constructorRepair.emit(visitors);
                 for (ClassVisitor visitor : visitors.values()) visitor.visitEnd();
             } finally { constructorRepair = null; }
         }
+    }
+
+    protected void convertClasses(DexFileNode fileNode, ClassVisitorFactory cvf, Map<String, Clz> classes) {
+        for (DexClassNode classNode : fileNode.clzs) convertClass(fileNode, classNode, cvf, classes);
     }
 
     protected void transformNew(IrMethod method) {

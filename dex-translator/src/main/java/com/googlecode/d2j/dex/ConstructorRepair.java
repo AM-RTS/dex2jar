@@ -15,7 +15,7 @@ final class ConstructorRepair {
         for (DexClassNode node : file.clzs) classes.put(node.className, node);
     }
 
-    InvokeExpr rewrite(String allocated, String caller, InvokeExpr call) {
+    synchronized InvokeExpr rewrite(String allocated, String caller, InvokeExpr call) {
         boolean allocation = allocated != null;
         if (allocated == null) {
             DexClassNode node = require(caller);

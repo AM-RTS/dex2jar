@@ -12,12 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.spi.FileSystemProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,66 +32,22 @@ public abstract class BaseCmd {
         return getBaseName(fn.getFileName().toString());
     }
 
-    public interface FileVisitorX {
-
-        // change the relative from Path to String
-        // java.nio.file.ProviderMismatchException on jdk8
-        void visitFile(Path file, String relative) throws IOException;
-
+    /** Compatibility wrappers for archive operations moved to ArchiveIO. */
+    public interface FileVisitorX extends com.googlecode.d2j.util.ArchiveIO.FileVisitorX { }
+    public static void walkFileTreeX(Path base, FileVisitorX fv) throws IOException {
+        com.googlecode.d2j.util.ArchiveIO.walkFileTreeX(base, fv);
     }
-
-    public static void walkFileTreeX(final Path base, final FileVisitorX fv) throws IOException {
-        Files.walkFileTree(base, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                fv.visitFile(file, base.relativize(file).toString());
-                return super.visitFile(file, attrs);
-            }
-        });
+    public static void walkJarOrDir(Path in, FileVisitorX fv) throws IOException {
+        com.googlecode.d2j.util.ArchiveIO.walkJarOrDir(in, fv);
     }
-
-    public static void walkJarOrDir(final Path in, final FileVisitorX fv) throws IOException {
-        if (Files.isDirectory(in)) {
-            walkFileTreeX(in, fv);
-        } else {
-            try (FileSystem inputFileSystem = openZip(in)) {
-                walkFileTreeX(inputFileSystem.getPath("/"), fv);
-            }
-        }
-    }
-
     public static void createParentDirectories(Path p) throws IOException {
-        // merge patch from t3stwhat, fix crash on save to windows path like 'C:\\abc.jar'
-        Path parent = p.getParent();
-        if (parent != null && !Files.exists(parent)) {
-            Files.createDirectories(parent);
-        }
+        com.googlecode.d2j.util.ArchiveIO.createParentDirectories(p);
     }
-
     public static FileSystem createZip(Path output) throws IOException {
-        Map<String, Object> env = new HashMap<>();
-        env.put("create", "true");
-        Files.deleteIfExists(output);
-
-        createParentDirectories(output);
-
-        for (FileSystemProvider p : FileSystemProvider.installedProviders()) {
-            String s = p.getScheme();
-            if ("jar".equals(s) || "zip".equalsIgnoreCase(s)) {
-                return p.newFileSystem(output, env);
-            }
-        }
-        throw new IOException("cant find zipfs support");
+        return com.googlecode.d2j.util.ArchiveIO.createZip(output);
     }
-
     public static FileSystem openZip(Path in) throws IOException {
-        for (FileSystemProvider p : FileSystemProvider.installedProviders()) {
-            String s = p.getScheme();
-            if ("jar".equals(s) || "zip".equalsIgnoreCase(s)) {
-                return p.newFileSystem(in, new HashMap<>());
-            }
-        }
-        throw new IOException("cant find zipfs support");
+        return com.googlecode.d2j.util.ArchiveIO.openZip(in);
     }
 
     protected static class HelpException extends RuntimeException {

@@ -2,7 +2,7 @@ package com.googlecode.d2j.dex;
 
 import com.googlecode.d2j.DexException;
 import com.googlecode.d2j.node.DexMethodNode;
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import org.objectweb.asm.AsmBridge;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.MethodNode;
@@ -12,6 +12,11 @@ public class ExDex2Asm extends Dex2Asm {
     protected final DexExceptionHandler exceptionHandler;
 
     public ExDex2Asm(DexExceptionHandler exceptionHandler) {
+        this(exceptionHandler, new java.util.Random(0));
+    }
+
+    protected ExDex2Asm(DexExceptionHandler exceptionHandler, java.util.Random random) {
+        super(random);
         this.exceptionHandler = exceptionHandler;
     }
 
@@ -24,8 +29,7 @@ public class ExDex2Asm extends Dex2Asm {
             super.convertCode(methodNode, mn, clzCtx);
         } catch (Exception ex) {
             if (exceptionHandler == null) {
-                new DexException(ex, "Failed to convert code for %s", methodNode.method)
-                        .printStackTrace();
+                throw new DexException(ex, "Failed to convert code for %s", methodNode.method);
             } else {
                 mn.instructions.clear();
                 mn.tryCatchBlocks.clear();
@@ -36,9 +40,8 @@ public class ExDex2Asm extends Dex2Asm {
         try {
             mn.accept(mv);
         } catch (Exception e) {
-            System.out.println("Cannot convert " + clzCtx.classDescriptor);
-            if (exceptionHandler != null)
-                exceptionHandler.handleMethodTranslateException(methodNode.method, methodNode, mn, e);
+            if (exceptionHandler != null) exceptionHandler.handleFileException(e);
+            throw new DexException(e, "Failed to emit code for %s", methodNode.method);
         }
         if (mw != null) {
             try {
@@ -47,8 +50,7 @@ public class ExDex2Asm extends Dex2Asm {
                 mn.instructions.clear();
                 mn.tryCatchBlocks.clear();
                 if (exceptionHandler == null) {
-                    new DexException(ex, "Failed to convert code for %s", methodNode.method)
-                            .printStackTrace();
+                    throw new DexException(ex, "Failed to convert code for %s", methodNode.method);
                 } else {
                     exceptionHandler.handleMethodTranslateException(methodNode.method, methodNode, mn, ex);
                 }

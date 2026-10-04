@@ -1,42 +1,39 @@
 package com.googlecode.d2j.dex;
 
-import com.googlecode.d2j.converter.IR2JConverter;
+import com.googlecode.d2j.DexException;
+import com.googlecode.d2j.util.ArchiveIO;
+import java.io.UncheckedIOException;
+import java.util.concurrent.ExecutorService;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import com.googlecode.d2j.node.DexFileNode;
-import com.googlecode.d2j.node.DexMethodNode;
 import com.googlecode.d2j.reader.BaseDexFileReader;
 import com.googlecode.d2j.reader.DexFileReader;
 import com.googlecode.d2j.reader.MultiDexFileReader;
-import com.googlecode.dex2jar.ir.IrMethod;
-import com.googlecode.dex2jar.ir.stmt.LabelStmt;
-import com.googlecode.dex2jar.ir.stmt.Stmt;
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.spi.FileSystemProvider;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
 
 public final class Dex2jar {
 
-    /**
-     * For rather deterministic output, we use a fixed seed for random number generator.
-     * This field is freely writable by any thread. Use carefully.
-     */
-    public static Random random = new Random(0);
+    private Random random = new Random(0);
+    private ExecutorService executor;
+
+    /** Caller owns the executor; conversions wait for all submitted class tasks. */
+    public Dex2jar withExecutor(ExecutorService executor) {
+        this.executor = executor;
+        return this;
+    }
 
     private DexExceptionHandler exceptionHandler;
 
@@ -60,11 +57,6 @@ public final class Dex2jar {
         doTranslate(null, baos);
     }
 
-    private static String toInternalClassName(String key) {
-        if (key.endsWith(";")) key = key.substring(1, key.length() - 1);
-        return key;
-    }
-
     /**
      * Translates a dex file to a class file and writes it to the specified destination path and stream.
      *
@@ -75,51 +67,21 @@ public final class Dex2jar {
 
         DexFileNode fileNode = new DexFileNode();
         try {
-            reader.accept(fileNode, readerConfig | DexFileReader.IGNORE_READ_EXCEPTION);
+            reader.accept(fileNode, readerConfig);
         } catch (Exception ex) {
-            exceptionHandler.handleFileException(ex);
+            if (exceptionHandler != null) exceptionHandler.handleFileException(ex);
+            throw new DexException(ex, "Failed to read dex");
         }
 
-        Map<String, String> parentsByName = fileNode.clzs.stream()
-                .filter(c -> c.superClass != null)
-                .collect(Collectors.toMap(
-                        c -> toInternalClassName(c.className),
-                        c -> toInternalClassName(c.superClass)));
-
+        final Map<String, String> parents = (readerConfig & DexFileReader.COMPUTE_FRAMES) == 0
+                ? Collections.emptyMap() : DexHierarchy.parents(fileNode);
         ClassVisitorFactory cvf = new ClassVisitorFactory() {
             @Override
             public ClassVisitor create(final String name) {
                 // If we choose to recompute the stack map frames, we need a special impl
                 final ClassWriter cw = (readerConfig & DexFileReader.COMPUTE_FRAMES) == 0
                         ? new ClassWriter(ClassWriter.COMPUTE_MAXS)
-                        : new ClassWriter(ClassWriter.COMPUTE_FRAMES) {
-                    @Override
-                    protected String getCommonSuperClass(String type1, String type2) {
-                        if (type1.equals(type2)) return type1;
-
-                        // First collect all the possible parents of type1
-                        Set<String> parentsOfType1 = new HashSet<>();
-                        parentsOfType1.add(type1);
-                        while (parentsByName.containsKey(type1)) {
-                            type1 = parentsByName.get(type1);
-                            parentsOfType1.add(type1);
-                        }
-
-                        // Then we see whether type2 or any of its parents match
-                        while (parentsByName.containsKey(type2)) {
-                            type2 = parentsByName.get(type2);
-                            if (parentsOfType1.contains(type2)) return type2;
-                        }
-
-                        try {
-                            // Maybe the default impl can resolve the rest
-                            return super.getCommonSuperClass(type1, type2);
-                        } catch (Throwable t) {
-                            // If all else fails
-                            return "java/util/Object";
-                        }
-                    }
-                };
+                        : new DexHierarchy(parents);
                 final LambadaNameSafeClassAdapter rca = new LambadaNameSafeClassAdapter(cw,
                         (readerConfig & DexFileReader.DONT_SANITIZE_NAMES) != 0);
                 return new ClassVisitor(Constants.ASM_VERSION, rca) {
@@ -133,8 +95,8 @@ public final class Dex2jar {
                             data = cw.toByteArray();
                         } catch (Exception ex) {
                             System.err.printf("ASM failed to generate .class file: %s%n", className);
-                            exceptionHandler.handleFileException(ex);
-                            return;
+                            if (exceptionHandler != null) exceptionHandler.handleFileException(ex);
+                            throw new DexException(ex, "Failed to generate %s", className);
                         }
                         try {
                             if (baos != null) {
@@ -145,7 +107,8 @@ public final class Dex2jar {
                                 baos.write(data);
                             }
                         } catch (IOException e) {
-                            e.printStackTrace(System.err);
+                            if (exceptionHandler != null) exceptionHandler.handleFileException(e);
+                            throw new UncheckedIOException(e);
                         }
                         try {
                             if (dist != null) {
@@ -157,75 +120,16 @@ public final class Dex2jar {
                                 Files.write(dist1, data);
                             }
                         } catch (IOException e) {
-                            e.printStackTrace(System.err);
+                            if (exceptionHandler != null) exceptionHandler.handleFileException(e);
+                            throw new UncheckedIOException(e);
                         }
                     }
                 };
             }
         };
 
-        new ExDex2Asm(exceptionHandler) {
-            public void convertCode(DexMethodNode methodNode, MethodVisitor mv, ClzCtx clzCtx) {
-                if ((readerConfig & DexFileReader.SKIP_CODE) != 0 && methodNode.method.getName().equals("<clinit>")) {
-                    // also skip clinit
-                    return;
-                }
-                super.convertCode(methodNode, mv, clzCtx);
-            }
-
-            @Override
-            public void optimize(IrMethod irMethod) {
-                T_CLEAN_LABEL.transform(irMethod);
-                /*if (0 != (v3Config & V3.TOPOLOGICAL_SORT)) {
-                    // T_topologicalSort.transform(irMethod);
-                }*/
-                T_DEAD_CODE.transform(irMethod);
-                T_REMOVE_LOCAL.transform(irMethod);
-                T_REMOVE_CONST.transform(irMethod);
-                T_ZERO.transform(irMethod);
-                if (T_NPE.transformReportChanged(irMethod)) {
-                    T_DEAD_CODE.transform(irMethod);
-                    T_REMOVE_LOCAL.transform(irMethod);
-                    T_REMOVE_CONST.transform(irMethod);
-                }
-                transformNew(irMethod);
-                T_FILL_ARRAY.transform(irMethod);
-                T_AGG.transform(irMethod);
-                T_MULTI_ARRAY.transform(irMethod);
-                T_VOID_INVOKE.transform(irMethod);
-                if (0 != (v3Config & V3.PRINT_IR)) {
-                    int i = 0;
-                    for (Stmt p : irMethod.stmts) {
-                        if (p.st == Stmt.ST.LABEL) {
-                            LabelStmt labelStmt = (LabelStmt) p;
-                            labelStmt.displayName = "L" + i++;
-                        }
-                    }
-                    System.out.println(irMethod);
-                }
-                {
-                    // https://github.com/pxb1988/dex2jar/issues/477
-                    // dead code found in unssa, clean up
-                    T_DEAD_CODE.transform(irMethod);
-                    T_REMOVE_LOCAL.transform(irMethod);
-                    T_REMOVE_CONST.transform(irMethod);
-                }
-                T_TYPE.transform(irMethod);
-                T_UNSSA.transform(irMethod);
-                T_IR_2_J_REG_ASSIGN.transform(irMethod);
-                T_TRIM_EX.transform(irMethod);
-            }
-
-            @Override
-            public void ir2j(IrMethod irMethod, MethodVisitor mv, ClzCtx clzCtx) {
-                new IR2JConverter()
-                        .optimizeSynchronized(0 != (V3.OPTIMIZE_SYNCHRONIZED & v3Config))
-                        .clzCtx(clzCtx)
-                        .ir(irMethod)
-                        .asm(mv)
-                        .convert();
-            }
-        }.convertDex(fileNode, cvf);
+        new Dex2jarTranslator(exceptionHandler, readerConfig, v3Config, random, executor)
+                .convertDex(fileNode, cvf);
 
     }
 
@@ -324,27 +228,12 @@ public final class Dex2jar {
         if (Files.exists(file) && Files.isDirectory(file)) {
             doTranslate(file);
         } else {
-            try (FileSystem fs = createZip(file)) {
-                doTranslate(fs.getPath("/"));
+            try {
+                ArchiveIO.writeZip(file, this::doTranslate);
+            } catch (UncheckedIOException e) {
+                throw e.getCause();
             }
         }
-    }
-
-    private static FileSystem createZip(Path output) throws IOException {
-        Map<String, Object> env = new HashMap<>();
-        env.put("create", "true");
-        Files.deleteIfExists(output);
-        Path parent = output.getParent();
-        if (parent != null && !Files.exists(parent)) {
-            Files.createDirectories(parent);
-        }
-        for (FileSystemProvider p : FileSystemProvider.installedProviders()) {
-            String s = p.getScheme();
-            if ("jar".equals(s) || "zip".equalsIgnoreCase(s)) {
-                return p.newFileSystem(output, env);
-            }
-        }
-        throw new IOException("cant find zipfs support");
     }
 
     public Dex2jar withExceptionHandler(DexExceptionHandler exceptionHandler) {
@@ -380,7 +269,7 @@ public final class Dex2jar {
     }
 
     public Dex2jar setRandom(Random random) {
-        Dex2jar.random = random;
+        this.random = Objects.requireNonNull(random);
         return this;
     }
 

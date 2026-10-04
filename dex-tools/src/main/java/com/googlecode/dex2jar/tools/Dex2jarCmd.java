@@ -106,18 +106,21 @@ public class Dex2jarCmd extends BaseCmd {
 
             BaseDexFileReader reader = MultiDexFileReader.open(Files.readAllBytes(new File(fileName).toPath()));
             BaksmaliBaseDexExceptionHandler handler = notHandleException ? null : new BaksmaliBaseDexExceptionHandler();
-            Dex2jar.from(reader).withExceptionHandler(handler).reUseReg(reuseReg).topoLogicalSort()
-                    .skipDebug(!debugInfo).optimizeSynchronized(this.optmizeSynchronized).printIR(printIR)
-                    .noCode(noCode).skipExceptions(skipExceptions).dontSanitizeNames(dontSanitizeNames)
-                    .computeFrames(computeFrames).to(file);
+            try {
+                Dex2jar.from(reader).withExceptionHandler(handler).reUseReg(reuseReg).topoLogicalSort()
+                        .skipDebug(!debugInfo).optimizeSynchronized(this.optmizeSynchronized).printIR(printIR)
+                        .noCode(noCode).skipExceptions(skipExceptions).dontSanitizeNames(dontSanitizeNames)
+                        .computeFrames(computeFrames).to(file);
 
-            if (!notHandleException) {
-                if (handler.hasException()) {
-                    Path errorFile = exceptionFile == null ? currentDir.resolve(baseName + "-error.zip")
-                            : exceptionFile;
-                    System.err.println("Detail Error Information in File " + errorFile);
-                    System.err.println(BaksmaliBaseDexExceptionHandler.REPORT_MESSAGE);
-                    handler.dump(errorFile, originalArgs);
+            } finally {
+                if (!notHandleException) {
+                    if (handler.hasException()) {
+                        Path errorFile = exceptionFile == null ? currentDir.resolve(baseName + "-error.zip")
+                                : exceptionFile;
+                        System.err.println("Detail Error Information in File " + errorFile);
+                        System.err.println(BaksmaliBaseDexExceptionHandler.REPORT_MESSAGE);
+                        handler.dump(errorFile, originalArgs);
+                    }
                 }
             }
             // long endTS = System.currentTimeMillis();

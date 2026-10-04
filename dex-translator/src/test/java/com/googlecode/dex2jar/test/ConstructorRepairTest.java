@@ -110,4 +110,37 @@ public class ConstructorRepairTest {
                 }));
         assertEquals(0, finished.get());
     }
+    @Test public void parallelCoreRetainsConstructorRepairs(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws Exception {
+        DexFileNode file = fixtureFile();
+        com.googlecode.d2j.reader.BaseDexFileReader reader = new com.googlecode.d2j.reader.BaseDexFileReader() {
+            public int getDexVersion() { return file.dexVersion; }
+            public List<String> getClassNames() { List<String> names = new ArrayList<>(); file.clzs.forEach(c -> names.add(c.className)); return names; }
+            public void accept(com.googlecode.d2j.visitors.DexFileVisitor visitor) { file.accept(visitor); }
+            public void accept(com.googlecode.d2j.visitors.DexFileVisitor visitor, int config) { accept(visitor); }
+            public void accept(com.googlecode.d2j.visitors.DexFileVisitor visitor, int index, int config) { file.clzs.get(index).accept(visitor); }
+        };
+        java.util.concurrent.ExecutorService workers = java.util.concurrent.Executors.newFixedThreadPool(4);
+        java.nio.file.Path output = dir.resolve("repair.jar");
+        try { com.googlecode.d2j.dex.Dex2jar.from(reader).withExecutor(workers).to(output); }
+        finally { workers.shutdown(); }
+        Map<String, byte[]> classes = new HashMap<>();
+        try (java.nio.file.FileSystem fs = com.googlecode.d2j.util.ArchiveIO.openZip(output)) {
+            for (String name : new String[]{"Base", "Middle", "Child", "Factory"})
+                classes.put("repair." + name, java.nio.file.Files.readAllBytes(fs.getPath("/repair/" + name + ".class")));
+        }
+        ClassLoader loader = new ClassLoader(null) {
+            @Override protected Class<?> findClass(String name) throws ClassNotFoundException {
+                byte[] bytes = classes.get(name);
+                if (bytes == null) throw new ClassNotFoundException(name);
+                return defineClass(name, bytes, 0, bytes.length);
+            }
+        };
+        Object object = loader.loadClass("repair.Factory").getMethod("create").invoke(null);
+        assertEquals("repair.Child", object.getClass().getName());
+        assertEquals(7L, object.getClass().getField("value").getLong(object));
+        assertEquals(1.0, object.getClass().getField("fraction").getDouble(object));
+        assertEquals(1, loader.loadClass("repair.Base").getField("hits").getInt(null));
+        loader.loadClass("repair.Child").getConstructor(String.class).newInstance("skip");
+        assertEquals(2, loader.loadClass("repair.Base").getField("hits").getInt(null));
+    }
 }

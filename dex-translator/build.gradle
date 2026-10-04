@@ -8,7 +8,6 @@ dependencies {
     api project(':dex-reader-api')
     api project(':dex-reader')
     api project(':dex-ir')
-    api project(':d2j-base-cmd')
     api project(path: ':d2j-external', configuration: 'shadow')
     // api libs.asm // Fixed MethodCodeTooLargeException
     api(libs.asm.tree) {

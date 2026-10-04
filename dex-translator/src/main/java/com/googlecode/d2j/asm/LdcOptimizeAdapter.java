@@ -1,6 +1,6 @@
 package com.googlecode.d2j.asm;
 
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -48,7 +48,7 @@ public class LdcOptimizeAdapter extends MethodVisitor implements Opcodes {
             }
         } else if (cst instanceof Float) {
             float value = (Float) cst;
-            if (value == 0.0F) {
+            if (Float.floatToRawIntBits(value) == 0) {
                 super.visitInsn(FCONST_0);
             } else if (value == 1.0F) {
                 super.visitInsn(FCONST_1);
@@ -59,7 +59,7 @@ public class LdcOptimizeAdapter extends MethodVisitor implements Opcodes {
             }
         } else if (cst instanceof Double) {
             double value = (Double) cst;
-            if (value == 0.0D) {
+            if (Double.doubleToRawLongBits(value) == 0L) {
                 super.visitInsn(DCONST_0);
             } else if (value == 1.0D) {
                 super.visitInsn(DCONST_1);

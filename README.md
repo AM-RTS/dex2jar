@@ -74,6 +74,26 @@ Tools to work with android .dex and java .class files
 3. Unzip the file `dex-tools-2.4-SNAPSHOT.zip`
 4. Run `d2j-dex2jar.sh` from the unzipped directory
 
+### Conversion failure policy
+
+JAR output from `Dex2jar.to(Path)` and the multithread command is staged beside the
+requested destination and atomically replaced only after conversion and ZIP close
+succeed. Fatal read, class generation, and write errors preserve existing output.
+If the filesystem does not support atomic replacement, publication fails instead
+of falling back to destructive replacement. Existing directory destinations still
+receive class files directly and are not transactional.
+
+A configured `DexExceptionHandler` can recover method translation errors with
+throwing stubs; these partial results are intentionally published. Without a
+handler (`--not-handle-exception` in the normal CLI), method errors abort conversion.
+The multithread command uses the same conversion pipeline, including constructor
+repair, and waits for all class workers before publishing or reporting errors.
+
+Randomness is owned by each conversion. Use `setRandom(new Random(seed))` or
+`resetRandom()` on that conversion; the global `Dex2jar.random` field was removed.
+Archive helpers and ASM/version constants now live in `dex-reader-api`; the old
+`BaseCmd` helpers and CLI `Constants` remain compatibility delegates.
+
 ### Example usage:
 
 ```shell

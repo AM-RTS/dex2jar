@@ -40,18 +40,18 @@ public class BaksmaliBaseDexExceptionHandler extends BaseDexExceptionHandler {
 
     private final List<Exception> fileExceptions = new ArrayList<>();
 
-    public boolean hasException() {
+    public synchronized boolean hasException() {
         return !exceptionMap.isEmpty() || !fileExceptions.isEmpty();
     }
 
     @Override
-    public void handleFileException(Exception e) {
+    public synchronized void handleFileException(Exception e) {
         super.handleFileException(e);
         fileExceptions.add(e);
     }
 
     @Override
-    public void handleMethodTranslateException(Method method, DexMethodNode methodNode, MethodVisitor mv, Exception e) {
+    public synchronized void handleMethodTranslateException(Method method, DexMethodNode methodNode, MethodVisitor mv, Exception e) {
         super.handleMethodTranslateException(method, methodNode, mv, e);
         exceptionMap.put(methodNode, e);
     }
@@ -76,7 +76,7 @@ public class BaksmaliBaseDexExceptionHandler extends BaseDexExceptionHandler {
         }
     }
 
-    public void dump(Path exFile, String[] originalArgs) {
+    public synchronized void dump(Path exFile, String[] originalArgs) {
         String fileName = exFile.getFileName().toString().toLowerCase();
         try {
             if (fileName.endsWith(".zip")) {
@@ -118,7 +118,7 @@ public class BaksmaliBaseDexExceptionHandler extends BaseDexExceptionHandler {
         }
     }
 
-    public void dumpZip(Path exFile, String[] originalArgs) throws IOException {
+    public synchronized void dumpZip(Path exFile, String[] originalArgs) throws IOException {
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(exFile))) {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, StandardCharsets.UTF_8));
 

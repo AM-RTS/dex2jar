@@ -19,7 +19,7 @@ import com.googlecode.d2j.node.DexMethodNode;
 import com.googlecode.d2j.reader.zip.ZipUtil;
 import com.googlecode.d2j.smali.BaksmaliDumper;
 import com.googlecode.d2j.visitors.DexClassVisitor;
-import com.googlecode.dex2jar.tools.Constants;
+import com.googlecode.d2j.util.Constants;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
