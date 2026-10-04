@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -63,46 +64,15 @@ final class StringDecryptor {
         String desc;
 
         @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((desc == null) ? 0 : desc.hashCode());
-            result = prime * result + ((name == null) ? 0 : name.hashCode());
-            result = prime * result + ((owner == null) ? 0 : owner.hashCode());
-            return result;
-        }
+        public int hashCode() { return Objects.hash(desc, name, owner); }
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
             MethodConfig other = (MethodConfig) obj;
-            if (desc == null) {
-                if (other.desc != null) {
-                    return false;
-                }
-            } else if (!desc.equals(other.desc)) {
-                return false;
-            }
-            if (name == null) {
-                if (other.name != null) {
-                    return false;
-                }
-            } else if (!name.equals(other.name)) {
-                return false;
-            }
-            if (owner == null) {
-                return other.owner == null;
-            } else {
-                return owner.equals(other.owner);
-            }
+            return Objects.equals(desc, other.desc) && Objects.equals(name, other.name)
+                    && Objects.equals(owner, other.owner);
         }
     }
 

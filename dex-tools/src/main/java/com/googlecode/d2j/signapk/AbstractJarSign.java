@@ -212,7 +212,7 @@ public abstract class AbstractJarSign {
     }
 
     protected String encodeBase64(byte[] data) {
-        return Base64.encodeToString(data, Base64.NO_WRAP);
+        return java.util.Base64.getEncoder().encodeToString(data);
     }
 
     public void sign(File in, File out) throws IOException, GeneralSecurityException {

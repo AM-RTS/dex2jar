@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.objectweb.asm.Type;
+import java.lang.invoke.MethodType;
 
 import com.googlecode.dex2jar.tools.StringDecryptor.MethodConfig;
 
@@ -45,7 +45,7 @@ final class DecryptMethodLoader implements AutoCloseable {
                     System.err.println("clz is null:" + config.owner);
                 }
                 jmethod = findAnyMethodMatch(clz, config.name,
-                        toJavaType(Type.getArgumentTypes(config.desc)));
+                        parameterTypes(config.desc));
             } catch (Exception ex) {
                 System.err.println("can't load method: L" + config.owner + ";->" + config.name + config.desc);
                 throw ex;
@@ -86,42 +86,10 @@ final class DecryptMethodLoader implements AutoCloseable {
         return null;
     }
 
-    Class<?>[] toJavaType(Type[] pt) throws ClassNotFoundException {
-        Class<?>[] jt = new Class<?>[pt.length];
-        for (int i = 0; i < pt.length; i++) {
-            jt[i] = toJavaType(pt[i]);
-        }
-        return jt;
+    Class<?>[] parameterTypes(String descriptor) throws ClassNotFoundException {
+        // Reflection matches parameters only; do not resolve an unused return type.
+        String parameters = descriptor.substring(0, descriptor.indexOf(')') + 1) + "V";
+        try { return MethodType.fromMethodDescriptorString(parameters, cl).parameterArray(); }
+        catch (TypeNotPresentException e) { throw new ClassNotFoundException(e.typeName(), e); }
     }
-
-    Class<?> toJavaType(Type t) throws ClassNotFoundException {
-        switch (t.getSort()) {
-        case Type.BOOLEAN:
-            return boolean.class;
-        case Type.BYTE:
-            return byte.class;
-        case Type.SHORT:
-            return short.class;
-        case Type.CHAR:
-            return char.class;
-        case Type.INT:
-            return int.class;
-        case Type.FLOAT:
-            return float.class;
-        case Type.LONG:
-            return long.class;
-        case Type.DOUBLE:
-            return double.class;
-        case Type.OBJECT:
-            return Class.forName(t.getClassName());
-        case Type.ARRAY:
-            return Class.forName(t.getDescriptor());
-        case Type.VOID:
-            return void.class;
-        default:
-            break;
-        }
-        throw new RuntimeException();
-    }
-
 }

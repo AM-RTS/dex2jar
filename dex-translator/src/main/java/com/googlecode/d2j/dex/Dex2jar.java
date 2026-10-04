@@ -141,23 +141,13 @@ public final class Dex2jar {
         return reader;
     }
 
-    public Dex2jar reUseReg(boolean b) {
-        if (b) {
-            this.v3Config |= V3.REUSE_REGISTER;
-        } else {
-            this.v3Config &= ~V3.REUSE_REGISTER;
-        }
-        return this;
-    }
+    /** @deprecated This option has no effect. */
+    @Deprecated
+    public Dex2jar reUseReg(boolean b) { return this; }
 
-    public Dex2jar topoLogicalSort(boolean b) {
-        if (b) {
-            this.v3Config |= V3.TOPOLOGICAL_SORT;
-        } else {
-            this.v3Config &= ~V3.TOPOLOGICAL_SORT;
-        }
-        return this;
-    }
+    /** @deprecated This option has no effect. */
+    @Deprecated
+    public Dex2jar topoLogicalSort(boolean b) { return this; }
 
     public Dex2jar noCode(boolean b) {
         if (b) {
@@ -186,10 +176,9 @@ public final class Dex2jar {
         return this;
     }
 
-    public Dex2jar reUseReg() {
-        this.v3Config |= V3.REUSE_REGISTER;
-        return this;
-    }
+    /** @deprecated This option has no effect. */
+    @Deprecated
+    public Dex2jar reUseReg() { return this; }
 
     public Dex2jar optimizeSynchronized() {
         this.v3Config |= V3.OPTIMIZE_SYNCHRONIZED;
@@ -201,10 +190,9 @@ public final class Dex2jar {
         return this;
     }
 
-    public Dex2jar topoLogicalSort() {
-        this.v3Config |= V3.TOPOLOGICAL_SORT;
-        return this;
-    }
+    /** @deprecated This option has no effect. */
+    @Deprecated
+    public Dex2jar topoLogicalSort() { return this; }
 
     public void setExceptionHandler(DexExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;

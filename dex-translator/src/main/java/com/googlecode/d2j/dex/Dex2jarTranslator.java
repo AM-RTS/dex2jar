@@ -41,9 +41,6 @@ final class Dex2jarTranslator extends ExDex2Asm {
     @Override
     public void optimize(IrMethod irMethod) {
         T_CLEAN_LABEL.transform(irMethod);
-        /*if (0 != (v3Config & V3.TOPOLOGICAL_SORT)) {
-            // T_topologicalSort.transform(irMethod);
-        }*/
         T_DEAD_CODE.transform(irMethod);
         T_REMOVE_LOCAL.transform(irMethod);
         T_REMOVE_CONST.transform(irMethod);

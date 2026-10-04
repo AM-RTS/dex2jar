@@ -64,4 +64,52 @@ class AuditRegressionTest {
             }
         }
     }
+    @Test void descriptorParametersUseLoaderAndIgnoreReturnType() throws Exception {
+        Path jar = dir.resolve("parameters.jar");
+        ClassWriter writer = new ClassWriter(0);
+        writer.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, "fixture/Parameter", null, "java/lang/Object", null);
+        writer.visitEnd();
+        ArchiveIO.writeZip(jar, root -> {
+            Files.createDirectories(root.resolve("fixture"));
+            Files.write(root.resolve("fixture/Parameter.class"), writer.toByteArray());
+        });
+        try (DecryptMethodLoader loader = new DecryptMethodLoader(jar, null)) {
+            Class<?>[] parameters = loader.parameterTypes("(Lfixture/Parameter;[[Ljava/lang/String;[IZBCSIJFD)Lmissing/Return;");
+            assertEquals("fixture.Parameter", parameters[0].getName());
+            assertArrayEquals(new Class<?>[]{String[][].class, int[].class, boolean.class, byte.class,
+                    char.class, short.class, int.class, long.class, float.class, double.class},
+                    Arrays.copyOfRange(parameters, 1, parameters.length));
+            assertThrows(ClassNotFoundException.class, () -> loader.parameterTypes("([Lmissing/Parameter;)V"));
+        }
+    }
+    @Test void methodKeysRetainEqualityAndHashCalculation() {
+        StringDecryptor.MethodConfig a = new StringDecryptor.MethodConfig(), b = new StringDecryptor.MethodConfig();
+        assertEquals(a, b); assertEquals(29791, a.hashCode());
+        a.desc = b.desc = "(I)V"; a.name = b.name = "decrypt"; a.owner = b.owner = "Fixture";
+        int hash = 1; hash = 31 * hash + a.desc.hashCode(); hash = 31 * hash + a.name.hashCode();
+        hash = 31 * hash + a.owner.hashCode();
+        assertEquals(hash, a.hashCode()); assertEquals(a, b);
+        assertNotEquals(a, new StringDecryptor.MethodConfig() {{ desc = "(I)V"; name = "decrypt"; owner = "Fixture"; }});
+        b.owner = null; assertNotEquals(a, b);
+    }
+    @Test void standardCodecMatchesExistingSigningUses() throws Exception {
+        Class<?> signer = com.googlecode.d2j.signapk.TinySignImpl.class;
+        for (String name : new String[]{"S_PRIVATE_KEY", "S_SIG_PREFIX"}) {
+            java.lang.reflect.Field field = signer.getDeclaredField(name); field.setAccessible(true);
+            String input = (String)field.get(null);
+            assertArrayEquals(com.googlecode.d2j.signapk.Base64.decode(input, 0), java.util.Base64.getDecoder().decode(input));
+        }
+        for (int length : new int[]{0, 1, 2, 3, 57, 58, 255, 256, 1024}) {
+            byte[] bytes = new byte[length]; for (int i = 0; i < length; i++) bytes[i] = (byte)i;
+            assertEquals(com.googlecode.d2j.signapk.Base64.encodeToString(bytes, 2), java.util.Base64.getEncoder().encodeToString(bytes));
+        }
+        assertNotNull(new com.googlecode.d2j.signapk.TinySignImpl());
+    }
+    @SuppressWarnings("deprecation")
+    @Test void legacyOptionsRemainFluentNoOps() throws Exception {
+        com.googlecode.d2j.dex.writer.DexFileWriter writer = new com.googlecode.d2j.dex.writer.DexFileWriter();
+        com.googlecode.d2j.dex.Dex2jar converter = com.googlecode.d2j.dex.Dex2jar.from(writer.toByteArray());
+        assertSame(converter, converter.reUseReg(true)); assertSame(converter, converter.reUseReg());
+        assertSame(converter, converter.topoLogicalSort(false)); assertSame(converter, converter.topoLogicalSort());
+    }
 }

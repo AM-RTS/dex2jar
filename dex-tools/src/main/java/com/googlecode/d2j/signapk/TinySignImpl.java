@@ -22,7 +22,7 @@ public final class TinySignImpl extends AbstractJarSign {
         PrivateKey privateKey;
         try {
             privateKey = KeyFactory.getInstance("RSA").generatePrivate(
-                    new PKCS8EncodedKeySpec(Base64.decode(S_PRIVATE_KEY, 0)));
+                    new PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(S_PRIVATE_KEY)));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
@@ -53,7 +53,7 @@ public final class TinySignImpl extends AbstractJarSign {
 
     @Override
     protected void writeSignatureBlock(byte[] signature, OutputStream out) throws IOException {
-        out.write(Base64.decode(S_SIG_PREFIX, 0));
+        out.write(java.util.Base64.getDecoder().decode(S_SIG_PREFIX));
         out.write(signature);
     }
 
