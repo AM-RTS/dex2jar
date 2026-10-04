@@ -39,6 +39,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -56,6 +57,7 @@ import org.objectweb.asm.signature.SignatureWriter;
 import org.objectweb.asm.tree.InnerClassNode;
 
 public class Dex2Asm {
+    private ConstructorRepair constructorRepair;
 
     private static boolean isPowerOfTwo(int i) {
         return (i & (i - 1)) == 0;
@@ -629,11 +631,29 @@ public class Dex2Asm {
 
     public void convertDex(DexFileNode fileNode, ClassVisitorFactory cvf) {
         if (fileNode.clzs != null) {
-            Map<String, Clz> classes = collectClzInfo(fileNode);
-            for (DexClassNode classNode : fileNode.clzs) {
-                convertClass(fileNode, classNode, cvf, classes);
-            }
+            constructorRepair = new ConstructorRepair(fileNode);
+            Map<String, ClassVisitor> visitors = new LinkedHashMap<>();
+            try {
+                Map<String, Clz> classes = collectClzInfo(fileNode);
+                ClassVisitorFactory delayed = name -> {
+                    ClassVisitor visitor = cvf.create(name);
+                    if (visitor == null) return null;
+                    visitors.put("L" + name + ";", visitor);
+                    return new ClassVisitor(Constants.ASM_VERSION, visitor) {
+                        @Override public void visitEnd() { /* Finish after forwarding constructors. */ }
+                    };
+                };
+                for (DexClassNode classNode : fileNode.clzs)
+                    convertClass(fileNode, classNode, delayed, classes);
+                constructorRepair.emit(visitors);
+                for (ClassVisitor visitor : visitors.values()) visitor.visitEnd();
+            } finally { constructorRepair = null; }
         }
+    }
+
+    protected void transformNew(IrMethod method) {
+        T_NEW.transform(method, constructorRepair == null ? null
+                : (allocated, call) -> constructorRepair.rewrite(allocated, method.owner, call));
     }
 
     public void convertField(DexClassNode classNode, DexFieldNode fieldNode, ClassVisitor cv) {
@@ -871,7 +891,7 @@ public class Dex2Asm {
             T_REMOVE_LOCAL.transform(irMethod);
             T_REMOVE_CONST.transform(irMethod);
         }
-        T_NEW.transform(irMethod);
+        transformNew(irMethod);
         T_FILL_ARRAY.transform(irMethod);
         T_AGG.transform(irMethod);
         T_MULTI_ARRAY.transform(irMethod);

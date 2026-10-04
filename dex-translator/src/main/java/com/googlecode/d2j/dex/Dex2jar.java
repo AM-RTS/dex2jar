@@ -188,7 +188,7 @@ public final class Dex2jar {
                     T_REMOVE_LOCAL.transform(irMethod);
                     T_REMOVE_CONST.transform(irMethod);
                 }
-                T_NEW.transform(irMethod);
+                transformNew(irMethod);
                 T_FILL_ARRAY.transform(irMethod);
                 T_AGG.transform(irMethod);
                 T_MULTI_ARRAY.transform(irMethod);

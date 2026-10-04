@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import static com.googlecode.dex2jar.ir.expr.Value.VT.INVOKE_SPECIAL;
 import static com.googlecode.dex2jar.ir.expr.Value.VT.LOCAL;
@@ -49,6 +50,10 @@ public class NewTransformer implements Transformer {
 
     @Override
     public void transform(IrMethod method) {
+        transform(method, null);
+    }
+
+    public void transform(IrMethod method, BiFunction<String, InvokeExpr, InvokeExpr> constructors) {
 
         // 1. replace
         // =========
@@ -59,14 +64,28 @@ public class NewTransformer implements Transformer {
         // a=new Abc();
         // b=a;
         // =========
-        replaceX(method);
+        replaceX(method, constructors);
 
         // 2. replace NEW Abc;.<init>() -> new Abc();
-        replaceAST(method);
+        replaceAST(method, constructors);
+
+        if (constructors != null && "<init>".equals(method.name)) {
+            Set<Value> self = new HashSet<>();
+            for (Stmt stmt : method.stmts) {
+                if (stmt.st == Stmt.ST.IDENTITY && stmt.getOp2().vt == Value.VT.THIS_REF)
+                    self.add(stmt.getOp1());
+            }
+            for (Stmt stmt : method.stmts) {
+                InvokeExpr call = findInvokeExpr(stmt);
+                if (stmt.st == VOID_INVOKE && call != null && call.vt == INVOKE_SPECIAL && "<init>".equals(call.getName())
+                        && (self.contains(call.getOps()[0]) || call.getOps()[0].vt == Value.VT.THIS_REF))
+                    stmt.setOp(constructors.apply(null, call));
+            }
+        }
 
     }
 
-    void replaceX(IrMethod method) {
+    void replaceX(IrMethod method, BiFunction<String, InvokeExpr, InvokeExpr> constructors) {
         final Map<Local, TObject> init = new HashMap<>();
         for (Stmt p : method.stmts) {
             if (p.st == ASSIGN && p.getOp1().vt == LOCAL && p.getOp2().vt == NEW) {
@@ -80,7 +99,7 @@ public class NewTransformer implements Transformer {
             final int size = Cfg.reIndexLocal(method);
             makeSureUsedBeforeConstructor(method, init, size);
             if (!init.isEmpty()) {
-                replace0(method, init, size);
+                replace0(method, init, size, constructors);
             }
             for (Stmt stmt : method.stmts) {
                 stmt.frame = null;
@@ -88,7 +107,7 @@ public class NewTransformer implements Transformer {
         }
     }
 
-    void replaceAST(IrMethod method) {
+    void replaceAST(IrMethod method, BiFunction<String, InvokeExpr, InvokeExpr> constructors) {
         Iterator<Stmt> it = method.stmts.iterator();
         while (it.hasNext()) {
             Stmt p = it.next();
@@ -102,7 +121,7 @@ public class NewTransformer implements Transformer {
                         NewExpr newExpr = (NewExpr) ie.getOps()[0];
                         if (newExpr != null) {
                             Value[] nOps = Arrays.copyOfRange(orgOps, 1, orgOps.length);
-                            InvokeExpr invokeNew = Exprs.nInvokeNew(nOps, ie.getArgs(), ie.getOwner());
+                            InvokeExpr invokeNew = newInvoke(newExpr.type, ie, constructors);
                             method.stmts.insertBefore(p, Stmts.nVoidInvoke(invokeNew));
                             it.remove();
                         }
@@ -112,7 +131,8 @@ public class NewTransformer implements Transformer {
         }
     }
 
-    void replace0(IrMethod method, Map<Local, TObject> init, int size) {
+    void replace0(IrMethod method, Map<Local, TObject> init, int size,
+                  BiFunction<String, InvokeExpr, InvokeExpr> constructors) {
         Set<Local> toDelete = new HashSet<>();
 
         Local[] locals = new Local[size];
@@ -155,9 +175,21 @@ public class NewTransformer implements Transformer {
             InvokeExpr ie = findInvokeExpr(obj.invokeStmt);
             Value[] orgOps = ie.getOps();
             Value[] nOps = Arrays.copyOfRange(orgOps, 1, orgOps.length);
-            InvokeExpr invokeNew = Exprs.nInvokeNew(nOps, ie.getArgs(), ie.getOwner());
+            InvokeExpr invokeNew = newInvoke(((NewExpr) obj.init.getOp2()).type, ie, constructors);
             method.stmts.replace(obj.invokeStmt, Stmts.nAssign(obj.local, invokeNew));
         }
+    }
+
+    private static InvokeExpr newInvoke(String allocatedType, InvokeExpr call,
+                                        BiFunction<String, InvokeExpr, InvokeExpr> constructors) {
+        if (!allocatedType.equals(call.getOwner())) {
+            if (constructors == null)
+                throw new IllegalStateException("Constructor hierarchy required for " + allocatedType
+                        + " initialized through " + call.getOwner());
+            return constructors.apply(allocatedType, call);
+        }
+        return Exprs.nInvokeNew(Arrays.copyOfRange(call.getOps(), 1, call.getOps().length),
+                call.getArgs(), allocatedType);
     }
 
     void makeSureUsedBeforeConstructor(IrMethod method, final Map<Local, TObject> init, final int size) {
