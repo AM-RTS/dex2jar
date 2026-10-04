@@ -809,7 +809,9 @@ public final class J2IRConverter {
                 }
                 if (insn.getOpcode() == MULTIANEWARRAY) {
                     MultiANewArrayInsnNode multi = (MultiANewArrayInsnNode) insn;
-                    NewMutiArrayExpr n = Exprs.nNewMutiArray(multi.desc.replaceAll("\\[+", ""), multi.dims, values);
+                    Type arrayType = Type.getType(multi.desc);
+                    NewMutiArrayExpr n = Exprs.nNewMutiArray(arrayType.getElementType().getDescriptor(),
+                            arrayType.getDimensions(), values);
                     return b(Type.getType(multi.desc).getSize(), n);
                 } else if (insn.getOpcode() == INVOKEDYNAMIC) {
                     InvokeDynamicInsnNode mi = (InvokeDynamicInsnNode) insn;
