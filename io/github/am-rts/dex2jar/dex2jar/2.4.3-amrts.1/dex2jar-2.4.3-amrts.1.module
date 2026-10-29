@@ -1,0 +1,244 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.am-rts.dex2jar",
+    "module": "dex2jar",
+    "version": "2.4.3-amrts.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.6.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-base-cmd",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-jasmin",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-smali",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-ir",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-tools",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-translator",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-writer",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "dex2jar-2.4.3-amrts.1.jar",
+          "url": "dex2jar-2.4.3-amrts.1.jar",
+          "size": 342,
+          "sha512": "79d380103323d67c6967e97e1e2a70fe69154648f07093b36e849f8d2376cb24292624d39a4c277d3c76d4257ffb1cd16439a30cd42f31c3269e75d1bd4ad351",
+          "sha256": "a93cbdbad272506ad7065f7b4575b4410d67f820ce44504dfbc1e9c7ddea78f1",
+          "sha1": "901b8575ecf5a89e3927caa3d80040eaa939a29b",
+          "md5": "7f6faee18a266ea8d4fa8cd3667a957b"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-base-cmd",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-jasmin",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-smali",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-ir",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-tools",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-translator",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-writer",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "dex2jar-2.4.3-amrts.1.jar",
+          "url": "dex2jar-2.4.3-amrts.1.jar",
+          "size": 342,
+          "sha512": "79d380103323d67c6967e97e1e2a70fe69154648f07093b36e849f8d2376cb24292624d39a4c277d3c76d4257ffb1cd16439a30cd42f31c3269e75d1bd4ad351",
+          "sha256": "a93cbdbad272506ad7065f7b4575b4410d67f820ce44504dfbc1e9c7ddea78f1",
+          "sha1": "901b8575ecf5a89e3927caa3d80040eaa939a29b",
+          "md5": "7f6faee18a266ea8d4fa8cd3667a957b"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "dex2jar-2.4.3-amrts.1-sources.jar",
+          "url": "dex2jar-2.4.3-amrts.1-sources.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "dex2jar-2.4.3-amrts.1-javadoc.jar",
+          "url": "dex2jar-2.4.3-amrts.1-javadoc.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    }
+  ]
+}

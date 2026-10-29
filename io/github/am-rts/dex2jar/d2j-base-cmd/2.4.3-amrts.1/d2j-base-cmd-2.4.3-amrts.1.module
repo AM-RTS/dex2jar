@@ -1,0 +1,132 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.am-rts.dex2jar",
+    "module": "d2j-base-cmd",
+    "version": "2.4.3-amrts.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.6.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "d2j-base-cmd-2.4.3-amrts.1.jar",
+          "url": "d2j-base-cmd-2.4.3-amrts.1.jar",
+          "size": 12291,
+          "sha512": "179dfb33968631ec07f3eecbf7d285c2decf0408d5b3881c63841af37f37fa7a6da00e6ef8ea2d047a0f831285fba40ac306297bbab29e41f1ad2d0e8c849b9a",
+          "sha256": "dfdcdee17377a10594ffc5d8e1b03c4a292ec09fe08f5097a2026f1449a5bb95",
+          "sha1": "45bce28fd2212e443c01e69df2b37e36071c21eb",
+          "md5": "8d6fb69468b28ccefe2fe6bed073674b"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "d2j-base-cmd-2.4.3-amrts.1.jar",
+          "url": "d2j-base-cmd-2.4.3-amrts.1.jar",
+          "size": 12291,
+          "sha512": "179dfb33968631ec07f3eecbf7d285c2decf0408d5b3881c63841af37f37fa7a6da00e6ef8ea2d047a0f831285fba40ac306297bbab29e41f1ad2d0e8c849b9a",
+          "sha256": "dfdcdee17377a10594ffc5d8e1b03c4a292ec09fe08f5097a2026f1449a5bb95",
+          "sha1": "45bce28fd2212e443c01e69df2b37e36071c21eb",
+          "md5": "8d6fb69468b28ccefe2fe6bed073674b"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "d2j-base-cmd-2.4.3-amrts.1-sources.jar",
+          "url": "d2j-base-cmd-2.4.3-amrts.1-sources.jar",
+          "size": 5377,
+          "sha512": "f2b593cdb0b67be79688fa7dbee53f9b8777b73a253e796c85b4fe6c8f9f1f571d5daee2ea341bc9b10845ff93d07364b106c6cab9fbad87e3e19296bb1b32b8",
+          "sha256": "9802352adc288b4caa2470fcda2cfabc6972c04086c08496e0765fcc885a5b1e",
+          "sha1": "6ab6fb406532b40445b3d7d4da4f7b13241d4a5b",
+          "md5": "0c820750daedf8dbee44efc7c4953815"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "d2j-base-cmd-2.4.3-amrts.1-javadoc.jar",
+          "url": "d2j-base-cmd-2.4.3-amrts.1-javadoc.jar",
+          "size": 4169273,
+          "sha512": "a6ec499bc895e7e77f499e9ab28a817eea2e129fd5ec29b2a93509011d557ac1e21b48be8c2c29171818f1c6eb39b2007674e8097b26a3f6016b037080a4a6bb",
+          "sha256": "b6f0984398300bf7df1770264c7116026df2f35083be7274c141102b2a9e9409",
+          "sha1": "652da3b5e5f106878c4e5baad573eb8e98178a70",
+          "md5": "39e7d4559fb7e782ccb4690506abfd91"
+        }
+      ]
+    }
+  ]
+}

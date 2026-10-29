@@ -1,0 +1,210 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.am-rts.dex2jar",
+    "module": "d2j-jasmin",
+    "version": "2.4.3-amrts.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.6.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.antlr",
+          "module": "antlr-runtime",
+          "version": {
+            "requires": "3.5.3"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "stringtemplate"
+            }
+          ]
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "org.ow2.asm",
+          "module": "asm-tree",
+          "version": {
+            "requires": "9.10.1"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "asm"
+            }
+          ]
+        },
+        {
+          "group": "org.ow2.asm",
+          "module": "asm-util",
+          "version": {
+            "requires": "9.10.1"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "asm"
+            }
+          ]
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-base-cmd",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "d2j-jasmin-2.4.3-amrts.1.jar",
+          "url": "d2j-jasmin-2.4.3-amrts.1.jar",
+          "size": 171781,
+          "sha512": "f84d55af43551e26c9e0cb036341e879c7e757310630ce0da2b0b0ff4634f4421e7be525b760cfc8e848c97a0853dd6c179e47ed82f91a1492ee211f878ee6de",
+          "sha256": "d55d73466b2ca006384ad7ddb86bb3ba57bc070850c4edb79333a1e697189fe8",
+          "sha1": "0fbbb62b1cbe45eff5afa1aab2808da8d3aeadb2",
+          "md5": "471098914097e8bfeb3b90c04599b337"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.antlr",
+          "module": "antlr-runtime",
+          "version": {
+            "requires": "3.5.3"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "stringtemplate"
+            }
+          ]
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "org.ow2.asm",
+          "module": "asm-tree",
+          "version": {
+            "requires": "9.10.1"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "asm"
+            }
+          ]
+        },
+        {
+          "group": "org.ow2.asm",
+          "module": "asm-util",
+          "version": {
+            "requires": "9.10.1"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "asm"
+            }
+          ]
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-base-cmd",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "d2j-jasmin-2.4.3-amrts.1.jar",
+          "url": "d2j-jasmin-2.4.3-amrts.1.jar",
+          "size": 171781,
+          "sha512": "f84d55af43551e26c9e0cb036341e879c7e757310630ce0da2b0b0ff4634f4421e7be525b760cfc8e848c97a0853dd6c179e47ed82f91a1492ee211f878ee6de",
+          "sha256": "d55d73466b2ca006384ad7ddb86bb3ba57bc070850c4edb79333a1e697189fe8",
+          "sha1": "0fbbb62b1cbe45eff5afa1aab2808da8d3aeadb2",
+          "md5": "471098914097e8bfeb3b90c04599b337"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "d2j-jasmin-2.4.3-amrts.1-sources.jar",
+          "url": "d2j-jasmin-2.4.3-amrts.1-sources.jar",
+          "size": 107067,
+          "sha512": "0ce45d01c57a6e232b0fe9bdd20e7df951b221a9f9ab4c51b21a8149a1ab951997997d2a4b89d3c5417f026a8ae40da13efe74f1eb09eb142b3068c0d1e2b640",
+          "sha256": "cf7c5521d4813a972d7397548b72f4d9924e7a155ff3538cdf910597c3b2e181",
+          "sha1": "750d690fae3c665d94b2309bed48469a0786afab",
+          "md5": "1e8e6d6eab7175eac4e18221b7e88bb1"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "d2j-jasmin-2.4.3-amrts.1-javadoc.jar",
+          "url": "d2j-jasmin-2.4.3-amrts.1-javadoc.jar",
+          "size": 4275575,
+          "sha512": "2acba3773f9d8efc6902ffc7057fa47b4c9cb3d8b4bb0568c568527268d36a611005fec5dc165c10dfb606c404393910e3a45f30f787b10e77c4ef8771004b3e",
+          "sha256": "670c971ab04288a8344cb0c50c6755f004038b67a94c384b1788afd252c83880",
+          "sha1": "11239f7627668e02ce57028eb53231b32fa4f453",
+          "md5": "1243c3d93ad6eecfca1e15ac96e1ff07"
+        }
+      ]
+    }
+  ]
+}

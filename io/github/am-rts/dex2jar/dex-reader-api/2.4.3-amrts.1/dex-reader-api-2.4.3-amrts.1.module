@@ -1,0 +1,118 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.am-rts.dex2jar",
+    "module": "dex-reader-api",
+    "version": "2.4.3-amrts.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.6.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "dex-reader-api-2.4.3-amrts.1.jar",
+          "url": "dex-reader-api-2.4.3-amrts.1.jar",
+          "size": 80339,
+          "sha512": "3ffdcc4d7934882a8adccb2e04f1f47eaef82dac15cd4c398d0f050e267282f11bf4931b5ba5700b5c4acec121bee29c3baba32af0aa2ad7f3dcef6117edf7e5",
+          "sha256": "ec4d42323e441ba1ef8612733d48f43305f252125f45ffe296ff99c16cb11c9c",
+          "sha1": "88b877e2435578333547f4350a9dfb08ff2d90cd",
+          "md5": "a8998d6e666f67da2de4f1b4f67c8130"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-external",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "dex-reader-api-2.4.3-amrts.1.jar",
+          "url": "dex-reader-api-2.4.3-amrts.1.jar",
+          "size": 80339,
+          "sha512": "3ffdcc4d7934882a8adccb2e04f1f47eaef82dac15cd4c398d0f050e267282f11bf4931b5ba5700b5c4acec121bee29c3baba32af0aa2ad7f3dcef6117edf7e5",
+          "sha256": "ec4d42323e441ba1ef8612733d48f43305f252125f45ffe296ff99c16cb11c9c",
+          "sha1": "88b877e2435578333547f4350a9dfb08ff2d90cd",
+          "md5": "a8998d6e666f67da2de4f1b4f67c8130"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "dex-reader-api-2.4.3-amrts.1-sources.jar",
+          "url": "dex-reader-api-2.4.3-amrts.1-sources.jar",
+          "size": 39006,
+          "sha512": "d40799ddff056852de7fb9a4fdfe45ab525a1696ca5c07223f9d23aaac8d72e1a3fcebe510c43e532c47add7d6300aafdde10e62e8f30e1d3a9c540112277d48",
+          "sha256": "4952b07f8fd6ff231f310df16b9107859513927b75a47af521785f897ca9a60f",
+          "sha1": "4ea655419972a15e42a609527b6790d4e1a1e2d1",
+          "md5": "8bdd086593d2a3ad0bd2781d2e1065a9"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "dex-reader-api-2.4.3-amrts.1-javadoc.jar",
+          "url": "dex-reader-api-2.4.3-amrts.1-javadoc.jar",
+          "size": 4401910,
+          "sha512": "1e5e4a1cc6159b816e4e5ebee10d92632889303c82d9bf382099a9631122014be4de5f15bff2c7d3fbfe872c37efda651d2f77d33afe65a707854a55cb542459",
+          "sha256": "a2e2198381952116625f9b6a1d7a8e7db2c5e6f0e4dbfd0080e6cd620a33c3dc",
+          "sha1": "33d7cdbf6d0fafa75e37e5343ead0cc1d62948cb",
+          "md5": "ee6764fa3e8be022cd0a03c557f25799"
+        }
+      ]
+    }
+  ]
+}

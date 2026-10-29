@@ -1,0 +1,118 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.am-rts.dex2jar",
+    "module": "dex-writer",
+    "version": "2.4.3-amrts.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.6.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "dex-writer-2.4.3-amrts.1.jar",
+          "url": "dex-writer-2.4.3-amrts.1.jar",
+          "size": 105564,
+          "sha512": "623bc1bc8a74471a74c544b690d4ab26e7b915c341db4beaa186572384fcfdd76254a74ca6790ddb3b1645cf24021a79f3eb646a40b30beb62e0c45229a4ed51",
+          "sha256": "6e33bfadd4062df01ab84cf18852a21e4f510153a528cbfac0c6c8b7cb81c1a5",
+          "sha1": "761c4df7b8ecc4719bdb8bb388b38f264673ddb6",
+          "md5": "7d76d34af48f0d6ebe5dc9dd971b6f55"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "dex-writer-2.4.3-amrts.1.jar",
+          "url": "dex-writer-2.4.3-amrts.1.jar",
+          "size": 105564,
+          "sha512": "623bc1bc8a74471a74c544b690d4ab26e7b915c341db4beaa186572384fcfdd76254a74ca6790ddb3b1645cf24021a79f3eb646a40b30beb62e0c45229a4ed51",
+          "sha256": "6e33bfadd4062df01ab84cf18852a21e4f510153a528cbfac0c6c8b7cb81c1a5",
+          "sha1": "761c4df7b8ecc4719bdb8bb388b38f264673ddb6",
+          "md5": "7d76d34af48f0d6ebe5dc9dd971b6f55"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "dex-writer-2.4.3-amrts.1-sources.jar",
+          "url": "dex-writer-2.4.3-amrts.1-sources.jar",
+          "size": 45828,
+          "sha512": "ad459b263694405f15b2f7363f030b33fb9a29441c6722e8da60e799438ba6ec191841885c5e542597892232656d1c9f56328ecd7ef9dac1b98ce5be7d549043",
+          "sha256": "df2b8dbf394b06f3e2f37e775130f114835356acc022ab85cb9699db5c76d843",
+          "sha1": "7e6e1153df6fba4ae04163f45c64559f4a522375",
+          "md5": "39db439acded61d849d185996ca506a5"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "dex-writer-2.4.3-amrts.1-javadoc.jar",
+          "url": "dex-writer-2.4.3-amrts.1-javadoc.jar",
+          "size": 4356608,
+          "sha512": "420bb89377f60f28032ac92f8bd7584289910099fb1f476451b9212afe5dbed9d0d402636ce7fb9699cefa0f38d7001bbd9425fe7844e7756400aec5f4df377e",
+          "sha256": "b823113a05cf4c2fda46a561b8414093c84fd4e93c598a5254391709bc27116d",
+          "sha1": "66231b332a79db510ddfe10e6ee25046be560daf",
+          "md5": "23d5cefc70ca439ab96d04af508b5c02"
+        }
+      ]
+    }
+  ]
+}

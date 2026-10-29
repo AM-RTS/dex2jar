@@ -1,0 +1,174 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.am-rts.dex2jar",
+    "module": "d2j-smali",
+    "version": "2.4.3-amrts.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.6.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.antlr",
+          "module": "antlr4-runtime",
+          "version": {
+            "requires": "4.13.2"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-base-cmd",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-writer",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "d2j-smali-2.4.3-amrts.1.jar",
+          "url": "d2j-smali-2.4.3-amrts.1.jar",
+          "size": 202453,
+          "sha512": "e7160e0a36670749db9b38afb5ed0d9e94aba9a13a96ca82291d58abe26bf6886071c15720b65633397e67d583ac209e888f79ca0003732a3b0be2b58024431d",
+          "sha256": "82392cc0a8d1a4aafdc6dadb3b29fd0a56e751ac981e36ccf89e79f4f7af687e",
+          "sha1": "c458bd21d7218d67af4a3becfd8402a005bbb0da",
+          "md5": "d5de93f3c7d74121b789b7980988d537"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.antlr",
+          "module": "antlr4-runtime",
+          "version": {
+            "requires": "4.13.2"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader-api",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-reader",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "d2j-base-cmd",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        },
+        {
+          "group": "io.github.am-rts.dex2jar",
+          "module": "dex-writer",
+          "version": {
+            "requires": "2.4.3-amrts.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "d2j-smali-2.4.3-amrts.1.jar",
+          "url": "d2j-smali-2.4.3-amrts.1.jar",
+          "size": 202453,
+          "sha512": "e7160e0a36670749db9b38afb5ed0d9e94aba9a13a96ca82291d58abe26bf6886071c15720b65633397e67d583ac209e888f79ca0003732a3b0be2b58024431d",
+          "sha256": "82392cc0a8d1a4aafdc6dadb3b29fd0a56e751ac981e36ccf89e79f4f7af687e",
+          "sha1": "c458bd21d7218d67af4a3becfd8402a005bbb0da",
+          "md5": "d5de93f3c7d74121b789b7980988d537"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "d2j-smali-2.4.3-amrts.1-sources.jar",
+          "url": "d2j-smali-2.4.3-amrts.1-sources.jar",
+          "size": 139942,
+          "sha512": "b78428a98b331afdf41c2f6815118dda2085812ef16329d4747d9c6c50213403187088a087943439727615b708b5889334dc0004b6968af062ca0d603aed9ac5",
+          "sha256": "a9d2814798f80fc76bdc555023f607be0fca307975cd6d8b33c9598499b36e09",
+          "sha1": "0aeeb83148ed4ef9f2eec654bd22fc0a6a620c93",
+          "md5": "c90cf66f3b75b06f28bc81e2aec77625"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "d2j-smali-2.4.3-amrts.1-javadoc.jar",
+          "url": "d2j-smali-2.4.3-amrts.1-javadoc.jar",
+          "size": 4485967,
+          "sha512": "c43aab87c0ff14c2a51e81436c01099f7b954f15883d58facffa1992d234415d95c36606ae751d908fbcd8839597b72011ffe9c256ba7e1fff539f8c54bf60a7",
+          "sha256": "9500005b6d6d8550f6645f6f32945d71686be8e30c98012212d6656d75585b44",
+          "sha1": "765416c81534531bf2534e1cafdfdde35e1ca467",
+          "md5": "b31c657b10484a6aac316fa30fe546a9"
+        }
+      ]
+    }
+  ]
+}
