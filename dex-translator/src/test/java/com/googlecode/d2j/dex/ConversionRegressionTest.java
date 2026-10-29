@@ -16,6 +16,51 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ConversionRegressionTest {
     @TempDir Path dir;
+    @Test void byteBuffersRespectRemainingBytesWithoutChangingPosition() throws Exception {
+        com.googlecode.d2j.dex.writer.DexFileWriter writer = new com.googlecode.d2j.dex.writer.DexFileWriter();
+        simpleFile().accept(writer); writer.visitEnd();
+        byte[] dex = writer.toByteArray();
+        java.io.ByteArrayOutputStream archive = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(archive)) {
+            zip.putNextEntry(new java.util.zip.ZipEntry("classes.dex")); zip.write(dex); zip.closeEntry();
+        }
+        for (byte[] data : new byte[][]{dex, archive.toByteArray()}) {
+            List<String> expectedNames = Dex2jar.from(data).getReader().getClassNames();
+            java.nio.ByteBuffer padded = java.nio.ByteBuffer.allocate(data.length + 12);
+            padded.position(5); padded.put(data); padded.limit(padded.position()); padded.position(5);
+            java.nio.ByteBuffer direct = java.nio.ByteBuffer.allocateDirect(data.length);
+            direct.put(data); direct.flip();
+            for (java.nio.ByteBuffer buffer : new java.nio.ByteBuffer[]{padded, padded.slice(), direct,
+                    padded.asReadOnlyBuffer()}) {
+                int position = buffer.position(), limit = buffer.limit();
+                assertEquals(expectedNames, Dex2jar.from(buffer).getReader().getClassNames());
+                assertEquals(position, buffer.position()); assertEquals(limit, buffer.limit());
+            }
+        }
+    }
+    @Test void craftedDexCannotEscapeDirectoryOutput() throws Exception {
+        Path outside = Files.write(dir.resolve("escaped.class"), new byte[]{1, 2, 3});
+        Path output = Files.createDirectory(dir.resolve("classes"));
+        com.googlecode.d2j.dex.writer.DexFileWriter writer = new com.googlecode.d2j.dex.writer.DexFileWriter();
+        writer.visit(Opcodes.ACC_PUBLIC, "L../escaped;", "Ljava/lang/Object;", null).visitEnd();
+        writer.visitEnd();
+        assertThrows(java.io.UncheckedIOException.class, () -> Dex2jar.from(writer.toByteArray()).to(output));
+        assertArrayEquals(new byte[]{1, 2, 3}, Files.readAllBytes(outside));
+        try (java.util.stream.Stream<Path> files = Files.list(output)) { assertEquals(0, files.count()); }
+    }
+    @Test void sharedOptimizationKeepsIrPrintingAndGeneratedBehavior() throws Exception {
+        Path output = dir.resolve("printed.jar");
+        Dex2jar.from(new NodeReader(simpleFile())).printIR(true).to(output);
+        try (FileSystem fs = ArchiveIO.openZip(output)) {
+            for (String name : new String[]{"A", "B"}) {
+                byte[] bytes = Files.readAllBytes(fs.getPath("/" + name + ".class"));
+                Class<?> fixture = new ClassLoader() {
+                    Class<?> define() { return defineClass(null, bytes, 0, bytes.length); }
+                }.define();
+                assertEquals(1, fixture.getMethod("value").invoke(null));
+            }
+        }
+    }
     @Test void negativeZeroRetainsRawBitsAndReciprocal() throws Exception {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         writer.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, "SignedZero", null, "java/lang/Object", null);
@@ -115,6 +160,86 @@ class ConversionRegressionTest {
         assertThrows(RejectedExecutionException.class,
                 () -> Dex2jar.from(new NodeReader(simpleFile())).withExecutor(workers).to(output));
         assertArrayEquals(original, Files.readAllBytes(output));
+    }
+    @Test void progressIsLiveOrderedAndResetsForSequentialAndParallelJobs() throws Exception {
+        for (boolean parallel : new boolean[]{false, true}) {
+            List<Integer> counts = new ArrayList<>();
+            List<Path> published = new ArrayList<>();
+            Path output = dir.resolve(parallel ? "progress-parallel.jar" : "progress-sequential.jar");
+            CountDownLatch firstClass = new CountDownLatch(1);
+            ExecutorService workers = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<Runnable>()) {
+                private int submitted;
+                @Override public Future<?> submit(Runnable task) {
+                    boolean waitForProgress = submitted++ == 1;
+                    return super.submit(() -> {
+                        if (waitForProgress) {
+                            try { assertTrue(firstClass.await(5, TimeUnit.SECONDS), "No live class progress"); }
+                            catch (InterruptedException e) { throw new AssertionError(e); }
+                        }
+                        task.run();
+                    });
+                }
+            };
+            Dex2jar conversion = Dex2jar.from(new NodeReader(simpleFile()))
+                    .withProgressListener(new Dex2jar.ProgressListener() {
+                        public void onProgressUpdate(int total, int processed) {
+                            assertEquals(2, total);
+                            counts.add(processed);
+                            if (processed == 1) firstClass.countDown();
+                        }
+                        public void onJarPublished(Path jar) {
+                            assertEquals(Arrays.asList(0, 1, 2), counts);
+                            try (FileSystem fs = ArchiveIO.openZip(jar)) {
+                                assertTrue(Files.exists(fs.getPath("/A.class")));
+                                assertTrue(Files.exists(fs.getPath("/B.class")));
+                            } catch (Exception e) { throw new AssertionError(e); }
+                            published.add(jar);
+                        }
+                    });
+            if (parallel) conversion.withExecutor(workers);
+            try {
+                for (int run = 0; run < 2; run++) {
+                    counts.clear();
+                    conversion.to(output);
+                    assertEquals(Arrays.asList(0, 1, 2), counts);
+                }
+                assertEquals(Arrays.asList(output, output), published);
+                counts.clear();
+                conversion.to(Files.createDirectory(dir.resolve(parallel ? "parallel-dir" : "sequential-dir")));
+                assertEquals(Arrays.asList(0, 1, 2), counts);
+                assertEquals(2, published.size());
+                counts.clear();
+                conversion.doTranslate(new java.io.ByteArrayOutputStream());
+                assertEquals(Arrays.asList(0, 1, 2), counts);
+                assertEquals(2, published.size());
+            } finally { workers.shutdownNow(); }
+        }
+    }
+    @Test void emptyConversionReportsZeroAndPublishes() throws Exception {
+        List<Integer> counts = new ArrayList<>();
+        Dex2jar.from(new NodeReader(new DexFileNode())).withProgressListener((total, processed) -> {
+            assertEquals(0, total); counts.add(processed);
+        }).to(dir.resolve("empty.jar"));
+        assertEquals(Collections.singletonList(0), counts);
+    }
+    @Test void failedConversionNeverReportsPublication() throws Exception {
+        for (boolean parallel : new boolean[]{false, true}) {
+            Path output = dir.resolve(parallel ? "failed-parallel.jar" : "failed-sequential.jar");
+            byte[] original = {1, 2, 3}; Files.write(output, original);
+            List<Integer> counts = new ArrayList<>();
+            ExecutorService workers = Executors.newFixedThreadPool(2);
+            Dex2jar conversion = Dex2jar.from(new NodeReader(brokenMethodFile()))
+                    .withProgressListener(new Dex2jar.ProgressListener() {
+                        public void onProgressUpdate(int total, int processed) { counts.add(processed); }
+                        public void onJarPublished(Path jar) { fail("Published failed conversion"); }
+                    });
+            if (parallel) conversion.withExecutor(workers);
+            try { assertThrows(RuntimeException.class, () -> conversion.to(output)); }
+            finally { workers.shutdownNow(); }
+            assertEquals(Collections.singletonList(0), counts);
+            assertArrayEquals(original, Files.readAllBytes(output));
+        }
     }
     @Test void randomConfigurationIsIsolatedBetweenJobs() throws Exception {
         Dex2jar first = Dex2jar.from(new NodeReader(arrayFile())).setRandom(new Random(17));

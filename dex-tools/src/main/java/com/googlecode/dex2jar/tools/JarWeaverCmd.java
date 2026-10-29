@@ -1,6 +1,7 @@
 package com.googlecode.dex2jar.tools;
 
 import com.googlecode.d2j.tools.jar.InvocationWeaver;
+import com.googlecode.d2j.util.ArchiveIO;
 import java.io.File;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -27,8 +28,7 @@ public class JarWeaverCmd extends BaseCmd {
 
         InvocationWeaver invocationWeaver = (InvocationWeaver) new InvocationWeaver().withConfig(config);
 
-        try (FileSystem fs = createZip(output)) {
-            final Path outRoot = fs.getPath("/");
+        ArchiveIO.writeZip(output, outRoot -> {
             for (String str : remainingArgs) {
                 Path p = new File(str).toPath();
                 System.err.println(p + " -> " + output);
@@ -52,7 +52,7 @@ public class JarWeaverCmd extends BaseCmd {
                     }
                 });
             }
-        }
+        });
     }
 
     public static void main(String... args) {

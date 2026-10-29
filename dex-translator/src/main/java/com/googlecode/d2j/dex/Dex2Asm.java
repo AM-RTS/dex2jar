@@ -15,6 +15,8 @@ import com.googlecode.d2j.node.DexFieldNode;
 import com.googlecode.d2j.node.DexFileNode;
 import com.googlecode.d2j.node.DexMethodNode;
 import com.googlecode.dex2jar.ir.IrMethod;
+import com.googlecode.dex2jar.ir.stmt.LabelStmt;
+import com.googlecode.dex2jar.ir.stmt.Stmt;
 import com.googlecode.dex2jar.ir.ts.AggTransformer;
 import com.googlecode.dex2jar.ir.ts.CleanLabel;
 import com.googlecode.dex2jar.ir.ts.DeadCodeTransformer;
@@ -892,6 +894,12 @@ public class Dex2Asm {
     }
 
     public void optimize(IrMethod irMethod) {
+        optimize(irMethod, false);
+        T_TRIM_EX.transform(irMethod);
+        T_IR_2_J_REG_ASSIGN.transform(irMethod);
+    }
+
+    protected void optimize(IrMethod irMethod, boolean printIR) {
         T_CLEAN_LABEL.transform(irMethod);
         T_DEAD_CODE.transform(irMethod);
         T_REMOVE_LOCAL.transform(irMethod);
@@ -908,6 +916,16 @@ public class Dex2Asm {
         T_MULTI_ARRAY.transform(irMethod);
         T_VOID_INVOKE.transform(irMethod);
 
+        if (printIR) {
+            int i = 0;
+            for (Stmt p : irMethod.stmts) {
+                if (p.st == Stmt.ST.LABEL) {
+                    ((LabelStmt) p).displayName = "L" + i++;
+                }
+            }
+            System.out.println(irMethod);
+        }
+
         {
             // https://github.com/pxb1988/dex2jar/issues/477
             // dead code found in unssa, clean up
@@ -918,8 +936,6 @@ public class Dex2Asm {
 
         T_TYPE.transform(irMethod);
         T_UNSSA.transform(irMethod);
-        T_TRIM_EX.transform(irMethod);
-        T_IR_2_J_REG_ASSIGN.transform(irMethod);
     }
 
     /**

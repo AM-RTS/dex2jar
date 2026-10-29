@@ -1,6 +1,7 @@
 package com.googlecode.d2j.smali;
 
 import com.googlecode.d2j.node.DexClassNode;
+import com.googlecode.d2j.util.ArchiveIO;
 import com.googlecode.d2j.visitors.DexClassVisitor;
 import com.googlecode.d2j.visitors.DexFileVisitor;
 import java.io.BufferedWriter;
@@ -48,10 +49,10 @@ public class BaksmaliDexFileVisitor extends DexFileVisitor {
             public void visitEnd() {
                 super.visitEnd();
 
-                Path smaliFile = dir
-                        .resolve(rebuildFileName(className.substring(1, className.length() - 1)) + ".smali");
-
+                final Path smaliFile;
                 try {
+                    smaliFile = ArchiveIO.resolveFile(dir,
+                            rebuildFileName(className.substring(1, className.length() - 1)) + ".smali");
                     Path parent = smaliFile.getParent();
                     if (parent != null && !Files.exists(parent)) {
                         Files.createDirectories(parent);

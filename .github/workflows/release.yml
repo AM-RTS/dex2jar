@@ -1,51 +1,74 @@
-# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
-
-name: Java CI with Gradle
+name: Release dex2jar
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: dex2jar-releases
+  cancel-in-progress: false
+
 jobs:
-  build:
+  release:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5
         with:
           java-version: '25'
-          distribution: 'temurin'
-          cache: 'gradle'
+          distribution: temurin
+          cache: gradle
 
-      - name: Generate and submit dependency graphs
-        uses: gradle/actions/dependency-submission@v5
+      - name: Prepare public Maven repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAVEN_DIR="$RUNNER_TEMP/dex2jar-maven"
+          echo "MAVEN_DIR=$MAVEN_DIR" >> "$GITHUB_ENV"
+          gh auth setup-git
+          git init --initial-branch=maven "$MAVEN_DIR"
+          git -C "$MAVEN_DIR" remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          if git -C "$MAVEN_DIR" ls-remote --exit-code --heads origin maven; then
+            git -C "$MAVEN_DIR" fetch --depth=1 origin maven
+            git -C "$MAVEN_DIR" checkout -B maven FETCH_HEAD
+          else
+            status=$?
+            if [ "$status" -ne 2 ]; then exit "$status"; fi
+          fi
+          echo "RELEASE_VERSION=2.4.$GITHUB_RUN_NUMBER-amrts.$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+
+      - name: Test, build, and stage Maven artifacts
+        shell: bash
+        run: |
+          ./gradlew check distZip publishAllPublicationsToReleaseRepository \
+            -Pversion="$RELEASE_VERSION" \
+            -PpublicationGroup=io.github.am-rts.dex2jar \
+            -PbuildRevision="$GITHUB_SHA" \
+            -PreleaseRepository="$MAVEN_DIR"
+
+      - name: Publish Maven repository and release downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "$MAVEN_DIR" config user.name 'github-actions[bot]'
+          git -C "$MAVEN_DIR" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$MAVEN_DIR" add .
+          git -C "$MAVEN_DIR" commit -m "Publish $RELEASE_VERSION from $GITHUB_SHA"
+          git -C "$MAVEN_DIR" push origin HEAD:maven
+          gh release create "$RELEASE_VERSION" \
+            --target "$GITHUB_SHA" --title "$RELEASE_VERSION" --generate-notes \
+            dex-tools/build/distributions/dex-tools-*.zip \
+            dex-*/build/libs/*.jar d2j-*/build/libs/*.jar
+
+      - uses: actions/upload-artifact@v7
         with:
-          dependency-graph: generate-and-submit
-
-      - name: Build dex-tools with Gradle
-        run: ./gradlew check -Pversion=2.4.${{ github.run_number }} distZip
-
-      - uses: ncipollo/release-action@v1
-        if: success()
-        with:
-          tag: 2.4.${{ github.run_number }}
-          artifacts: dex-tools/build/distributions/dex-tools-*.zip
-
-      - name: Archive dex tools
-        uses: actions/upload-artifact@v7
-        if: success()
-        with:
+          name: dex2jar-${{ env.RELEASE_VERSION }}
           path: dex-tools/build/distributions/dex-tools-*.zip
-          archive: false
-
-      - name: Publish to Maven Central
-        run: ./gradlew -Pversion=2.4.${{ github.run_number }} publish closeAndReleaseStagingRepositories
-        env:
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          if-no-files-found: error

@@ -14,6 +14,72 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AuditRegressionTest {
     @TempDir Path dir;
+    @Test void legacyFlagsDoNotBlockDebugConversion() throws Exception {
+        com.googlecode.d2j.dex.writer.DexFileWriter writer = new com.googlecode.d2j.dex.writer.DexFileWriter();
+        writer.visit(Opcodes.ACC_PUBLIC, "LFixture;", "Ljava/lang/Object;", null).visitEnd();
+        writer.visitEnd();
+        Path input = Files.write(dir.resolve("fixture.dex"), writer.toByteArray());
+        Path output = dir.resolve("debug.jar");
+        new Dex2jarCmd().doMain("-d", "-r", "-s", "-ts", "-o", output.toString(), input.toString());
+        try (FileSystem fs = ArchiveIO.openZip(output)) { assertTrue(Files.exists(fs.getPath("/Fixture.class"))); }
+    }
+    @Test void archiveRewritersSupportInPlaceAndPreserveFailedOutput() throws Exception {
+        Path config = Files.write(dir.resolve("empty.cfg"), new byte[0]);
+        for (String tool : new String[]{"access", "weaver", "standard", "version"}) {
+            Path jar = dir.resolve(tool + ".jar");
+            ArchiveIO.writeZip(jar, root -> {
+                Files.createDirectories(root.resolve("nested"));
+                Files.write(root.resolve("nested/resource.txt"), new byte[]{7});
+                ClassWriter cw = new ClassWriter(0);
+                cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, "nested/Fixture", null, "java/lang/Object", null);
+                cw.visitEnd(); Files.write(root.resolve("nested/Fixture.class"), cw.toByteArray());
+            });
+            rewrite(tool, jar, jar, config);
+            try (FileSystem fs = ArchiveIO.openZip(jar)) {
+                assertArrayEquals(new byte[]{7}, Files.readAllBytes(fs.getPath("/nested/resource.txt")), tool);
+                assertEquals("nested/Fixture", new ClassReader(Files.readAllBytes(fs.getPath("/nested/Fixture.class"))).getClassName());
+            }
+            byte[] original = Files.readAllBytes(jar);
+            Path bad = Files.write(dir.resolve(tool + "-bad.jar"), new byte[]{1, 2, 3});
+            if (tool.equals("version")) assertThrows(java.io.IOException.class, () -> rewrite(tool, bad, jar, config));
+            else rewrite(tool, bad, jar, config);
+            assertArrayEquals(original, Files.readAllBytes(jar), tool);
+        }
+    }
+    private void rewrite(String tool, Path input, Path output, Path config) throws Exception {
+        switch (tool) {
+        case "access": new JarAccessCmd().doMain("-f", "-ac", "final", "-o", output.toString(), input.toString()); break;
+        case "weaver": new JarWeaverCmd().doMain("-c", config.toString(), "-o", output.toString(), input.toString()); break;
+        case "standard": new StdApkCmd().doMain("-o", output.toString(), input.toString()); break;
+        case "version": ClassVersionSwitch.main("8", input.toString(), output.toString()); break;
+        default: throw new AssertionError(tool);
+        }
+    }
+    @Test void jasminCommandsCanRoundTripAnArchiveInPlace() throws Exception {
+        Path jar = dir.resolve("jasmin.jar");
+        ArchiveIO.writeZip(jar, root -> {
+            ClassWriter cw = new ClassWriter(0);
+            cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, "Fixture", null, "java/lang/Object", null);
+            cw.visitEnd(); Files.write(root.resolve("Fixture.class"), cw.toByteArray());
+        });
+        new com.googlecode.d2j.jasmin.Jar2JasminCmd().doMain("-f", "-o", jar.toString(), jar.toString());
+        try (FileSystem fs = ArchiveIO.openZip(jar)) { assertTrue(Files.exists(fs.getPath("/Fixture.j"))); }
+        new com.googlecode.d2j.jasmin.Jasmin2JarCmd().doMain("-f", "-o", jar.toString(), jar.toString());
+        try (FileSystem fs = ArchiveIO.openZip(jar)) {
+            assertEquals("Fixture", new ClassReader(Files.readAllBytes(fs.getPath("/Fixture.class"))).getClassName());
+        }
+    }
+    @Test void failedJasminAndStubOutputsPreserveExistingArchives() throws Exception {
+        Path output = Files.write(dir.resolve("existing.jar"), new byte[]{1, 2, 3});
+        Path badJar = Files.write(dir.resolve("bad.jar"), new byte[]{4});
+        new com.googlecode.d2j.jasmin.Jar2JasminCmd().doMain("-f", "-o", output.toString(), badJar.toString());
+        assertArrayEquals(new byte[]{1, 2, 3}, Files.readAllBytes(output));
+        Path badJasmin = Files.write(dir.resolve("bad.j"), ".class public Broken\n.super\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        new com.googlecode.d2j.jasmin.Jasmin2JarCmd().doMain("-f", "-o", output.toString(), badJasmin.toString());
+        assertArrayEquals(new byte[]{1, 2, 3}, Files.readAllBytes(output));
+        new GenerateCompileStubFromOdex().doMain("-o", output.toString(), badJar.toString());
+        assertArrayEquals(new byte[]{1, 2, 3}, Files.readAllBytes(output));
+    }
     public static String decrypt(String text) { return "decoded:" + text; }
     @Test void concurrentFailuresAllAppearInReport() throws Exception {
         BaksmaliBaseDexExceptionHandler handler = new BaksmaliBaseDexExceptionHandler();

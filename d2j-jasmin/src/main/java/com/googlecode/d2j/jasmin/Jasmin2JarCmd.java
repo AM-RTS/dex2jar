@@ -1,6 +1,7 @@
 package com.googlecode.d2j.jasmin;
 
 import com.googlecode.dex2jar.tools.BaseCmd;
+import com.googlecode.d2j.util.ArchiveIO;
 import com.googlecode.dex2jar.tools.Constants;
 import java.io.BufferedReader;
 import java.io.File;
@@ -91,9 +92,7 @@ public class Jasmin2JarCmd extends BaseCmd implements Opcodes {
         if (!output.toString().endsWith(".jar") && !output.toString().endsWith(".zip")) {
             assemble0(jar, output);
         } else {
-            try (FileSystem fs = createZip(output)) {
-                assemble0(jar, fs.getPath("/"));
-            }
+            ArchiveIO.writeZip(output, root -> assemble0(jar, root));
         }
     }
 
@@ -131,6 +130,9 @@ public class Jasmin2JarCmd extends BaseCmd implements Opcodes {
             parser.rebuildLine = autogenLines;
             ClassWriter cw = new ClassWriter(noComputeMax ? 0 : ClassWriter.COMPUTE_MAXS);
             ClassNode cn = parser.parse();
+            if (parser.getNumberOfSyntaxErrors() != 0 || lexer.getNumberOfSyntaxErrors() != 0) {
+                throw new IOException("Failed to assemble " + file);
+            }
             if (cn.version == 0) {
                 cn.version = Constants.JAVA_VERSIONS[classVersion];
             }
@@ -139,12 +141,11 @@ public class Jasmin2JarCmd extends BaseCmd implements Opcodes {
                         .dump(cn);
             }
             cn.accept(cw);
-            Path clzFile = output.resolve(cn.name.replace('.', '/') + ".class");
+            Path clzFile = ArchiveIO.resolveFile(output, cn.name.replace('.', '/') + ".class");
             createParentDirectories(clzFile);
             Files.write(clzFile, cw.toByteArray());
         } catch (RecognitionException e) {
-            System.err.println("Failed to assemble " + file);
-            e.printStackTrace();
+            throw new IOException("Failed to assemble " + file, e);
         }
     }
 

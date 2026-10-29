@@ -1,5 +1,6 @@
 package com.googlecode.dex2jar.tools;
 
+import com.googlecode.d2j.util.ArchiveIO;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,38 +33,40 @@ public final class ClassVersionSwitch {
         File n = new File(args[2]);
         byte[] buff = new byte[1024 * 50];
         final int jVersion = Constants.JAVA_VERSIONS[version];
-        try (ZipFile zip = new ZipFile(old); ZipOutputStream zos =
-                new ZipOutputStream(Files.newOutputStream(n.toPath()))) {
+        ArchiveIO.writeAtomically(n.toPath(), staged -> {
+            try (ZipFile zip = new ZipFile(old); ZipOutputStream zos =
+                    new ZipOutputStream(Files.newOutputStream(staged))) {
 
-            Enumeration<? extends ZipEntry> e = zip.entries();
-            while (e.hasMoreElements()) {
-                ZipEntry zipEntry = e.nextElement();
-                zos.putNextEntry(new ZipEntry(zipEntry.getName()));
-                if (!zipEntry.isDirectory()) {
-                    try (InputStream is = zip.getInputStream(zipEntry)) {
-                        if (zipEntry.getName().endsWith(".class")) {
-                            ClassReader cr = new ClassReader(is);
-                            ClassWriter cw = new ClassWriter(0);
-                            ClassVisitor cv = new ClassVisitor(Constants.ASM_VERSION, cw) {
-                                @Override
-                                public void visit(int version, int access, String name, String signature,
-                                                  String superName, String[] interfaces) {
-                                    super.visit(jVersion, access, name, signature, superName, interfaces);
+                Enumeration<? extends ZipEntry> e = zip.entries();
+                while (e.hasMoreElements()) {
+                    ZipEntry zipEntry = e.nextElement();
+                    zos.putNextEntry(new ZipEntry(zipEntry.getName()));
+                    if (!zipEntry.isDirectory()) {
+                        try (InputStream is = zip.getInputStream(zipEntry)) {
+                            if (zipEntry.getName().endsWith(".class")) {
+                                ClassReader cr = new ClassReader(is);
+                                ClassWriter cw = new ClassWriter(0);
+                                ClassVisitor cv = new ClassVisitor(Constants.ASM_VERSION, cw) {
+                                    @Override
+                                    public void visit(int version, int access, String name, String signature,
+                                                      String superName, String[] interfaces) {
+                                        super.visit(jVersion, access, name, signature, superName, interfaces);
+                                    }
+                                };
+                                cr.accept(cv, ClassReader.EXPAND_FRAMES | ClassReader.SKIP_FRAMES);
+                                zos.write(cw.toByteArray());
+                            } else {
+                                for (int c = is.read(buff); c > 0; c = is.read(buff)) {
+                                    zos.write(buff, 0, c);
                                 }
-                            };
-                            cr.accept(cv, ClassReader.EXPAND_FRAMES | ClassReader.SKIP_FRAMES);
-                            zos.write(cw.toByteArray());
-                        } else {
-                            for (int c = is.read(buff); c > 0; c = is.read(buff)) {
-                                zos.write(buff, 0, c);
                             }
                         }
-                    }
 
+                    }
+                    zos.closeEntry();
                 }
-                zos.closeEntry();
             }
-        }
+        });
     }
 
 }

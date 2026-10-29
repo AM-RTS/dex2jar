@@ -1,8 +1,8 @@
 package com.googlecode.dex2jar.tools;
 
+import com.googlecode.d2j.util.ArchiveIO;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.objectweb.asm.ClassReader;
@@ -152,8 +152,7 @@ public class JarAccessCmd extends BaseCmd implements Opcodes {
 
         final int flags = removeDebug ? ClassReader.SKIP_DEBUG : 0;
 
-        try (FileSystem outFileSystem = createZip(output)) {
-            final Path outRoot = outFileSystem.getPath("/");
+        ArchiveIO.writeZip(output, outRoot -> {
             walkJarOrDir(jar, new FileVisitorX() {
                 @Override
                 public void visitFile(Path file, String relative) throws IOException {
@@ -195,14 +194,18 @@ public class JarAccessCmd extends BaseCmd implements Opcodes {
                             }
 
                         }, flags | ClassReader.EXPAND_FRAMES);
-                        Files.write(outRoot.resolve(relative), cr.toByteArray());
+                        Path target = outRoot.resolve(relative);
+                        createParentDirectories(target);
+                        Files.write(target, cr.toByteArray());
 
                     } else {
-                        Files.copy(file, outRoot.resolve(relative));
+                        Path target = outRoot.resolve(relative);
+                        createParentDirectories(target);
+                        Files.copy(file, target);
                     }
                 }
             });
-        }
+        });
     }
 
 }

@@ -4,11 +4,12 @@ import com.googlecode.d2j.dex.ClassVisitorFactory;
 import com.googlecode.d2j.dex.Dex2Asm;
 import com.googlecode.d2j.node.DexFileNode;
 import com.googlecode.d2j.reader.DexFileReader;
+import com.googlecode.d2j.util.ArchiveIO;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.objectweb.asm.ClassVisitor;
@@ -44,8 +45,7 @@ public class GenerateCompileStubFromOdex extends BaseCmd {
             output = new File("stub.jar").toPath();
         }
 
-        try (FileSystem fs = createZip(output)) {
-            Path out = fs.getPath("/");
+        ArchiveIO.writeZip(output, out -> {
             for (String x : remainingArgs) {
                 System.err.println("Processing " + x + " ...");
                 ByteBuffer bs = ByteBuffer.wrap(Files.readAllBytes(new File(x).toPath()))
@@ -64,7 +64,7 @@ public class GenerateCompileStubFromOdex extends BaseCmd {
                 }
 
             }
-        }
+        });
     }
 
     private void doDex(ByteBuffer bs, final Path out) {
@@ -75,7 +75,9 @@ public class GenerateCompileStubFromOdex extends BaseCmd {
         dex2Asm.convertDex(fileNode, new ClassVisitorFactory() {
             @Override
             public ClassVisitor create(final String classInternalName) {
-                final Path target = out.resolve(classInternalName + ".class");
+                final Path target;
+                try { target = ArchiveIO.resolveFile(out, classInternalName + ".class"); }
+                catch (IOException e) { throw new UncheckedIOException(e); }
                 if (Files.exists(target)) {
                     System.err.println("Class " + classInternalName + " already exists, skipping.");
                     return null;
@@ -90,7 +92,7 @@ public class GenerateCompileStubFromOdex extends BaseCmd {
                             BaseCmd.createParentDirectories(target);
                             Files.write(target, data);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            throw new UncheckedIOException(e);
                         }
                     }
 

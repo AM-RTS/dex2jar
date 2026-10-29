@@ -19,7 +19,7 @@ import com.googlecode.d2j.visitors.DexDebugVisitor;
 import com.googlecode.d2j.visitors.DexFieldVisitor;
 import com.googlecode.d2j.visitors.DexFileVisitor;
 import com.googlecode.d2j.visitors.DexMethodVisitor;
-import java.io.ByteArrayOutputStream;
+import com.googlecode.d2j.reader.zip.ZipUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -354,7 +354,7 @@ public class DexFileReader implements BaseDexFileReader {
     }
 
     public DexFileReader(InputStream is) throws IOException {
-        this(toByteArray(is));
+        this(ZipUtil.toByteArray(is));
     }
 
     /**
@@ -366,15 +366,6 @@ public class DexFileReader implements BaseDexFileReader {
     private static int readStringIndex(ByteBuffer bs) {
         int offsetIndex = readULeb128i(bs);
         return offsetIndex - 1;
-    }
-
-    private static byte[] toByteArray(InputStream is) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buff = new byte[1024];
-        for (int c = is.read(buff); c > 0; c = is.read(buff)) {
-            out.write(buff, 0, c);
-        }
-        return out.toByteArray();
     }
 
     private static ByteBuffer slice(ByteBuffer in, int offset, int length) {

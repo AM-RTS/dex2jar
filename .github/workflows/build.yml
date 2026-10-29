@@ -3,6 +3,9 @@
 
 name: Java CI with Gradle
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ develop ]
@@ -21,11 +24,6 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
           cache: 'gradle'
-
-      - name: Generate dependency graphs
-        uses: gradle/actions/dependency-submission@v5
-        with:
-          dependency-graph: generate
 
       - name: Build dex-tools with Gradle
         run: ./gradlew check distZip

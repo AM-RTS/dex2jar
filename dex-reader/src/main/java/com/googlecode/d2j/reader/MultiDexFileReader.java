@@ -1,7 +1,7 @@
 package com.googlecode.d2j.reader;
 
 import com.googlecode.d2j.DexConstants;
-import com.googlecode.d2j.util.zip.AccessBufByteArrayOutputStream;
+import com.googlecode.d2j.reader.zip.ZipUtil;
 import com.googlecode.d2j.util.zip.ZipEntry;
 import com.googlecode.d2j.util.zip.ZipFile;
 import com.googlecode.d2j.visitors.DexFileVisitor;
@@ -27,17 +27,8 @@ public class MultiDexFileReader implements BaseDexFileReader {
         init();
     }
 
-    private static byte[] toByteArray(InputStream is) throws IOException {
-        AccessBufByteArrayOutputStream out = new AccessBufByteArrayOutputStream();
-        byte[] buff = new byte[1024];
-        for (int c = is.read(buff); c > 0; c = is.read(buff)) {
-            out.write(buff, 0, c);
-        }
-        return out.getBuf();
-    }
-
     public static BaseDexFileReader open(InputStream in) throws IOException {
-        return open(toByteArray(in));
+        return open(ZipUtil.toByteArray(in));
     }
 
     public static BaseDexFileReader open(byte[] data) throws IOException {
@@ -53,7 +44,7 @@ public class MultiDexFileReader implements BaseDexFileReader {
                     String entryName = e.getName();
                     if (entryName.startsWith("classes") && entryName.endsWith(".dex")) {
                         if (!dexFileReaders.containsKey(entryName)) { // only the first one
-                            dexFileReaders.put(entryName, new DexFileReader(toByteArray(zipFile.getInputStream(e))));
+                            dexFileReaders.put(entryName, new DexFileReader(ZipUtil.toByteArray(zipFile.getInputStream(e))));
                         }
                     }
                 }

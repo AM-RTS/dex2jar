@@ -16,7 +16,7 @@
 
 package com.googlecode.d2j.reader.zip;
 
-import com.googlecode.d2j.util.zip.AccessBufByteArrayOutputStream;
+import java.io.ByteArrayOutputStream;
 import com.googlecode.d2j.util.zip.ZipEntry;
 import com.googlecode.d2j.util.zip.ZipFile;
 import java.io.File;
@@ -36,12 +36,12 @@ public final class ZipUtil {
     }
 
     public static byte[] toByteArray(InputStream is) throws IOException {
-        AccessBufByteArrayOutputStream out = new AccessBufByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buff = new byte[1024];
-        for (int c = is.read(buff); c > 0; c = is.read(buff)) {
+        for (int c = is.read(buff); c != -1; c = is.read(buff)) {
             out.write(buff, 0, c);
         }
-        return out.getBuf();
+        return out.toByteArray();
     }
 
     /**

@@ -32,15 +32,13 @@ public class Dex2jarCmd extends BaseCmd {
             + ".jar", argName = "out-jar-file")
     private Path output;
 
-    @Opt(opt = "r", longOpt = "reuse-reg", hasArg = false, description = "reuse register while generate java .class "
-            + "file")
+    @Opt(opt = "r", longOpt = "reuse-reg", hasArg = false, description = "deprecated; accepted with no effect")
     private boolean reuseReg = false;
 
-    @Opt(opt = "s", hasArg = false, description = "same with --topological-sort/-ts")
+    @Opt(opt = "s", hasArg = false, description = "deprecated; accepted with no effect")
     private boolean topologicalSort1 = false;
 
-    @Opt(opt = "ts", longOpt = "topological-sort", hasArg = false, description = "sort block by topological, that "
-            + "will generate more readable code, default enabled")
+    @Opt(opt = "ts", longOpt = "topological-sort", hasArg = false, description = "deprecated; accepted with no effect")
     private boolean topologicalSort = false;
 
     @Opt(opt = "d", longOpt = "debug-info", hasArg = false, description = "translate debug info")
@@ -76,10 +74,6 @@ public class Dex2jarCmd extends BaseCmd {
             System.err.println("-e/-o can only used with one file");
             return;
         }
-        if (debugInfo && reuseReg) {
-            System.err.println("-d/-r can not use together");
-            return;
-        }
 
         Path currentDir = new File(".").toPath();
 
@@ -107,7 +101,7 @@ public class Dex2jarCmd extends BaseCmd {
             BaseDexFileReader reader = MultiDexFileReader.open(Files.readAllBytes(new File(fileName).toPath()));
             BaksmaliBaseDexExceptionHandler handler = notHandleException ? null : new BaksmaliBaseDexExceptionHandler();
             try {
-                Dex2jar.from(reader).withExceptionHandler(handler).reUseReg(reuseReg).topoLogicalSort()
+                Dex2jar.from(reader).withExceptionHandler(handler)
                         .skipDebug(!debugInfo).optimizeSynchronized(this.optmizeSynchronized).printIR(printIR)
                         .noCode(noCode).skipExceptions(skipExceptions).dontSanitizeNames(dontSanitizeNames)
                         .computeFrames(computeFrames).to(file);

@@ -28,6 +28,24 @@ public final class Dex2jar {
 
     private Random random = new Random(0);
     private ExecutorService executor;
+    private ProgressListener progressListener;
+
+    /**
+     * Callbacks are serialized on the conversion/worker threads; UI callers must dispatch to their UI thread.
+     * Class progress measures translation, before constructor repair and output writing.
+     * Listener exceptions propagate; an exception from onJarPublished occurs after publication.
+     */
+    public interface ProgressListener {
+        void onProgressUpdate(int totalClasses, int processedClasses);
+
+        /** Called only after a JAR has been closed and atomically published, never for directory/stream output. */
+        default void onJarPublished(Path output) { }
+    }
+
+    public Dex2jar withProgressListener(ProgressListener listener) {
+        this.progressListener = listener;
+        return this;
+    }
 
     /** Caller owns the executor; conversions wait for all submitted class tasks. */
     public Dex2jar withExecutor(ExecutorService executor) {
@@ -112,7 +130,7 @@ public final class Dex2jar {
                         }
                         try {
                             if (dist != null) {
-                                Path dist1 = dist.resolve(className + ".class");
+                                Path dist1 = ArchiveIO.resolveFile(dist, className + ".class");
                                 Path parent = dist1.getParent();
                                 if (parent != null && !Files.exists(parent)) {
                                     Files.createDirectories(parent);
@@ -128,7 +146,7 @@ public final class Dex2jar {
             }
         };
 
-        new Dex2jarTranslator(exceptionHandler, readerConfig, v3Config, random, executor)
+        new Dex2jarTranslator(exceptionHandler, readerConfig, v3Config, random, executor, progressListener)
                 .convertDex(fileNode, cvf);
 
     }
@@ -221,6 +239,7 @@ public final class Dex2jar {
             } catch (UncheckedIOException e) {
                 throw e.getCause();
             }
+            if (progressListener != null) progressListener.onJarPublished(file);
         }
     }
 
@@ -270,7 +289,9 @@ public final class Dex2jar {
     }
 
     public static Dex2jar from(ByteBuffer in) throws IOException {
-        return from(MultiDexFileReader.open(in.array()));
+        byte[] data = new byte[in.remaining()];
+        in.duplicate().get(data);
+        return from(data);
     }
 
     public static Dex2jar from(BaseDexFileReader reader) {

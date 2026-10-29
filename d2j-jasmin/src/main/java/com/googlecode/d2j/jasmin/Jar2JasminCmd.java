@@ -1,6 +1,7 @@
 package com.googlecode.d2j.jasmin;
 
 import com.googlecode.dex2jar.tools.BaseCmd;
+import com.googlecode.d2j.util.ArchiveIO;
 import com.googlecode.dex2jar.tools.BaseCmd.Syntax;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -66,9 +67,7 @@ public class Jar2JasminCmd extends BaseCmd {
         if (!output.toString().endsWith(".jar") && !output.toString().endsWith(".apk")) {
             disassemble0(jar, output);
         } else {
-            try (FileSystem fs = createZip(output)) {
-                disassemble0(jar, fs.getPath("/"));
-            }
+            ArchiveIO.writeZip(output, root -> disassemble0(jar, root));
         }
     }
 
@@ -98,7 +97,7 @@ public class Jar2JasminCmd extends BaseCmd {
 
     private void disassemble1(Path file, Path output) throws IOException {
         ClassReader r = new ClassReader(Files.readAllBytes(file));
-        Path jFile = output.resolve(r.getClassName().replace('.', '/') + ".j");
+        Path jFile = ArchiveIO.resolveFile(output, r.getClassName().replace('.', '/') + ".j");
         createParentDirectories(jFile);
         try (BufferedWriter out = Files.newBufferedWriter(jFile, Charset.forName(encoding))) {
             PrintWriter pw = new PrintWriter(out);

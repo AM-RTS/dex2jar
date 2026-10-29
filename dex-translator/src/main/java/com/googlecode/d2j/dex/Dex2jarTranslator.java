@@ -13,8 +13,6 @@ import com.googlecode.d2j.converter.IR2JConverter;
 import com.googlecode.d2j.node.DexMethodNode;
 import com.googlecode.d2j.reader.DexFileReader;
 import com.googlecode.dex2jar.ir.IrMethod;
-import com.googlecode.dex2jar.ir.stmt.LabelStmt;
-import com.googlecode.dex2jar.ir.stmt.Stmt;
 import java.util.Random;
 import org.objectweb.asm.MethodVisitor;
 
@@ -23,11 +21,16 @@ final class Dex2jarTranslator extends ExDex2Asm {
     private final int readerConfig;
     private final int v3Config;
     private final ExecutorService executor;
-    Dex2jarTranslator(DexExceptionHandler handler, int readerConfig, int v3Config, Random random, ExecutorService executor) {
+    private final Dex2jar.ProgressListener progressListener;
+    private int processedClasses;
+
+    Dex2jarTranslator(DexExceptionHandler handler, int readerConfig, int v3Config, Random random,
+                      ExecutorService executor, Dex2jar.ProgressListener progressListener) {
         super(handler, random);
         this.readerConfig = readerConfig;
         this.v3Config = v3Config;
         this.executor = executor;
+        this.progressListener = progressListener;
     }
 
     public void convertCode(DexMethodNode methodNode, MethodVisitor mv, ClzCtx clzCtx) {
@@ -40,40 +43,7 @@ final class Dex2jarTranslator extends ExDex2Asm {
 
     @Override
     public void optimize(IrMethod irMethod) {
-        T_CLEAN_LABEL.transform(irMethod);
-        T_DEAD_CODE.transform(irMethod);
-        T_REMOVE_LOCAL.transform(irMethod);
-        T_REMOVE_CONST.transform(irMethod);
-        T_ZERO.transform(irMethod);
-        if (T_NPE.transformReportChanged(irMethod)) {
-            T_DEAD_CODE.transform(irMethod);
-            T_REMOVE_LOCAL.transform(irMethod);
-            T_REMOVE_CONST.transform(irMethod);
-        }
-        transformNew(irMethod);
-        T_FILL_ARRAY.transform(irMethod);
-        T_AGG.transform(irMethod);
-        T_MULTI_ARRAY.transform(irMethod);
-        T_VOID_INVOKE.transform(irMethod);
-        if (0 != (v3Config & V3.PRINT_IR)) {
-            int i = 0;
-            for (Stmt p : irMethod.stmts) {
-                if (p.st == Stmt.ST.LABEL) {
-                    LabelStmt labelStmt = (LabelStmt) p;
-                    labelStmt.displayName = "L" + i++;
-                }
-            }
-            System.out.println(irMethod);
-        }
-        {
-            // https://github.com/pxb1988/dex2jar/issues/477
-            // dead code found in unssa, clean up
-            T_DEAD_CODE.transform(irMethod);
-            T_REMOVE_LOCAL.transform(irMethod);
-            T_REMOVE_CONST.transform(irMethod);
-        }
-        T_TYPE.transform(irMethod);
-        T_UNSSA.transform(irMethod);
+        super.optimize(irMethod, (v3Config & V3.PRINT_IR) != 0);
         T_IR_2_J_REG_ASSIGN.transform(irMethod);
         T_TRIM_EX.transform(irMethod);
     }
@@ -89,8 +59,20 @@ final class Dex2jarTranslator extends ExDex2Asm {
     }
 
     @Override
+    public void convertClass(DexFileNode fileNode, DexClassNode node,
+                             ClassVisitorFactory cvf, Map<String, Clz> classes) {
+        super.convertClass(fileNode, node, cvf, classes);
+        if (progressListener != null) {
+            synchronized (this) {
+                progressListener.onProgressUpdate(fileNode.clzs.size(), ++processedClasses);
+            }
+        }
+    }
+
+    @Override
     protected void convertClasses(DexFileNode fileNode,
                                   ClassVisitorFactory cvf, Map<String, Clz> classes) {
+        if (progressListener != null) progressListener.onProgressUpdate(fileNode.clzs.size(), 0);
         if (executor == null) {
             super.convertClasses(fileNode, cvf, classes);
             return;

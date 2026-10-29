@@ -4,7 +4,7 @@ plugins {
     id 'signing'
 }
 
-group = 'de.femtopedia.dex2jar'
+group = project.findProperty('publicationGroup') ?: 'de.femtopedia.dex2jar'
 version = project.findProperty('version')
 version = version == null || version == 'unspecified' ? '2.4-SNAPSHOT' : version
 
@@ -16,6 +16,14 @@ repositories {
 jar {
     manifest {
         attributes('Implementation-Version': version)
+        if (project.hasProperty('buildRevision')) attributes('Build-Revision': project.property('buildRevision'))
+    }
+}
+
+if (project.hasProperty('releaseRepository')) {
+    publishing.repositories.maven {
+        name = 'Release'
+        url = uri(project.property('releaseRepository'))
     }
 }
 
@@ -94,7 +102,7 @@ afterEvaluate {
                 pom {
                     name.set(project.name)
                     description.set(project.description)
-                    url.set("https://github.com/ThexXTURBOXx/dex2jar")
+                    url.set("https://github.com/AM-RTS/dex2jar")
                     licenses {
                         license {
                             name.set('The Apache License, Version 2.0')
@@ -114,12 +122,12 @@ afterEvaluate {
                         }
                     }
                     scm {
-                        url.set("https://github.com/ThexXTURBOXx/dex2jar.git")
-                        connection.set("scm:git:git://github.com/ThexXTURBOXx/dex2jar.git")
-                        developerConnection.set("scm:git:git://github.com/ThexXTURBOXx/dex2jar.git")
+                        url.set("https://github.com/AM-RTS/dex2jar.git")
+                        connection.set("scm:git:https://github.com/AM-RTS/dex2jar.git")
+                        developerConnection.set("scm:git:https://github.com/AM-RTS/dex2jar.git")
                     }
                     issueManagement {
-                        url.set("https://github.com/ThexXTURBOXx/dex2jar/issues")
+                        url.set("https://github.com/AM-RTS/dex2jar/issues")
                     }
                 }
             }

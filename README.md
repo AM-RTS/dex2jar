@@ -20,6 +20,34 @@ This is [Nico Mexis'](https://github.com/ThexXTURBOXx) fork of the dex2jar proje
 
 ## Downloads
 
+### This fork's automatic releases
+
+Every tested push to `AM-RTS/dex2jar`'s `main` publishes versioned module JARs
+and the CLI distribution to [GitHub Releases](https://github.com/AM-RTS/dex2jar/releases).
+The same modules are published to the public `maven` branch; downloading them
+requires no token or Maven Central account:
+
+```groovy
+repositories {
+    maven {
+        url = 'https://raw.githubusercontent.com/AM-RTS/dex2jar/maven'
+        content { includeGroup 'io.github.am-rts.dex2jar' }
+    }
+    mavenCentral()
+}
+dependencies {
+    implementation 'io.github.am-rts.dex2jar:dex-translator:VERSION'
+}
+```
+
+Use an exact release version from the releases page. Versions have the form
+`2.4.<run>-amrts.<attempt>`; each JAR records its version and `Build-Revision`.
+Consumers such as BlackObfuscator use Dependabot to propose grouped version
+updates and run behavior tests before merging. Existing installations do not
+change until the consuming project is rebuilt.
+
+The following Maven Central coordinates and download links describe upstream.
+
 This fork has builds available in the following formats.<br>
 You can also only depend on a single module, if needed. The following sections include all the modules.
 
@@ -83,6 +111,17 @@ If the filesystem does not support atomic replacement, publication fails instead
 of falling back to destructive replacement. Existing directory destinations still
 receive class files directly and are not transactional.
 
+Archive rewriting commands (JAR access/weaving, ZIP standardization, class version
+switching, Jasmin conversion, and ODEX stub generation) also stage their output
+before atomic publication. Class-derived output paths reject traversal, absolute
+names, and existing link escapes. Output directories must not be modified by
+another process during conversion.
+
+`Dex2jar.from(ByteBuffer)` reads the remaining bytes without moving the caller's
+position, including direct, read-only, and sliced buffers. Legacy register-reuse
+and topological-sort options remain accepted with no effect, including with debug
+information enabled.
+
 A configured `DexExceptionHandler` can recover method translation errors with
 throwing stubs; these partial results are intentionally published. Without a
 handler (`--not-handle-exception` in the normal CLI), method errors abort conversion.
@@ -93,6 +132,16 @@ Randomness is owned by each conversion. Use `setRandom(new Random(seed))` or
 `resetRandom()` on that conversion; the global `Dex2jar.random` field was removed.
 Archive helpers and ASM/version constants now live in `dex-reader-api`; the old
 `BaseCmd` helpers and CLI `Constants` remain compatibility delegates.
+
+Use `withProgressListener((total, processed) -> ...)` for live class translation
+counts, starting at zero on each conversion. This works with sequential conversion
+and `withExecutor(...)`; callbacks are serialized on conversion/worker threads, so
+Android callers must dispatch UI updates to the main thread. Translation reaching
+the total does not mean the output is ready: constructor repair and writing follow.
+Implement `ProgressListener.onJarPublished(Path)` to receive notification after
+successful ZIP close and atomic publication. Directory and stream output do not
+send this notification. Listener exceptions propagate; publication callback errors
+occur after the JAR is already published. CLI progress display is not enabled.
 
 ### Example usage:
 
